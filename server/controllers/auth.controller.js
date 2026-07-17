@@ -39,17 +39,20 @@ exports.signup = async (req, res) => {
 
     // Create user
     const user = await User.create({
-      fullName,
-      username,
-      email,
-      password: hashedPassword,
-    });
+  fullName,
+  username,
+  email,
+  password: hashedPassword,
+});
 
-    res.status(201).json({
-      success: true,
-      message: "User Registered Successfully",
-      user,
-    });
+const userData = user.toObject();
+delete userData.password;
+
+res.status(201).json({
+  success: true,
+  message: "User Registered Successfully",
+  user: userData,
+});
 
   } catch (error) {
 
@@ -140,6 +143,22 @@ exports.logout = async (req, res) => {
       message: "Logged out successfully",
     });
 
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
+
+exports.getCurrentUser = async (req, res) => {
+  try {
+    return res.status(200).json({
+      success: true,
+      data: req.user,
+    });
   } catch (error) {
     console.log(error);
 

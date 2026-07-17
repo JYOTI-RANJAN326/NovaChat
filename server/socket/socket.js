@@ -1,64 +1,45 @@
 const { Server } = require("socket.io");
 
+const socketHandler = require("./socketHandler");
+
 let io;
 
-// NEW
 const onlineUsers = new Map();
 
 const initializeSocket = (server) => {
+  io = new Server(server, {
+    cors: {
+      origin: "http://localhost:5173",
+      credentials: true,
+    },
+  });
 
-    io = new Server(server, {
-        cors: {
-            origin: "http://localhost:3000",
-            credentials: true,
-        },
-    });
+  io.on("connection", (socket) => {
+    console.log("🟢 User Connected:", socket.id);
 
-    io.on("connection", (socket) => {
+    socketHandler(io, socket, onlineUsers);
 
-        console.log("Connected:", socket.id);
+    socket.on("disconnect", () => {
 
-        // User setup
-       socket.on("setup", (userId) => {
-
-       socket.userId = userId; // Save on socket
-
-       onlineUsers.set(userId, socket.id);
-       socket.join(userId);
-       io.emit("online-users", [...onlineUsers.keys()]);
-       console.log("User Online:", userId);
-
-});
-
-    
-        socket.on("disconnect", () => {
-
-    if (socket.userId) {
+      if (socket.userId) {
         onlineUsers.delete(socket.userId);
-        console.log("User Offline:", socket.userId);
-    }
-      io.emit("online-users", [...onlineUsers.keys()]);
+      }
 
-    console.log("Disconnected:", socket.id);
-     console.log(onlineUsers);
-
-});
-
-});
-
+      console.log("🔴 User Disconnected:", socket.id);
+    });
+  });
 };
 
 const getIO = () => {
+  if (!io) {
+    throw new Error("Socket.IO not initialized");
+  }
 
-    if (!io) {
-        throw new Error("Socket.IO not initialized");
-    }
-
-    return io;
+  return io;
 };
 
 module.exports = {
-    initializeSocket,
-    getIO,
-    onlineUsers, 
+  initializeSocket,
+  getIO,
+  onlineUsers,
 };

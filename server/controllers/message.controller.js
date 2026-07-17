@@ -1,15 +1,15 @@
 const Chat = require("../models/Chat");
 const Message = require("../models/Message");
+const { getIO } = require("../socket/socket");
 
 
 
 exports.sendMessage = async (req, res) => {
   try {
-
     const {
       chatId,
       text,
-      attachments = [],
+      attachment = null,
       replyTo = null,
     } = req.body;
 
@@ -21,15 +21,14 @@ exports.sendMessage = async (req, res) => {
     }
 
     // At least one of text or attachment
+    const hasText = text && text.trim().length > 0;
 
-  const hasText = text && text.trim().length > 0;// prevents user from send blank messages
-
-if (!hasText && attachments.length === 0) {
-  return res.status(400).json({
-    success: false,
-    message: "Message cannot be empty",
-  });
-}
+    if (!hasText && !attachment) {
+      return res.status(400).json({
+        success: false,
+        message: "Message cannot be empty",
+      });
+    }
 
     const chat = await Chat.findById(chatId);
 
@@ -41,7 +40,7 @@ if (!hasText && attachments.length === 0) {
     }
 
     // Check participant
-    const isParticipant = chat.participants.some(member =>
+    const isParticipant = chat.participants.some((member) =>
       member.equals(req.user._id)
     );
 
@@ -53,80 +52,79 @@ if (!hasText && attachments.length === 0) {
     }
 
     // Reply validation
-   if (replyTo) {
+    if (replyTo) {
+      const repliedMessage = await Message.findById(replyTo);
 
-  const repliedMessage = await Message.findById(replyTo);
+      if (!repliedMessage) {
+        return res.status(404).json({
+          success: false,
+          message: "Reply message not found",
+        });
+      }
 
-  if (!repliedMessage) {
-    return res.status(404).json({
-      success: false,
-      message: "Reply message not found",
-    });
-  }
+      if (!repliedMessage.chat.equals(chat._id)) {
+        return res.status(400).json({
+          success: false,
+          message: "Reply message belongs to another chat",
+        });
+      }
 
-  // Reply must belong to same chat
-  if (!repliedMessage.chat.equals(chat._id)) {
-    return res.status(400).json({
-      success: false,
-      message: "Reply message belongs to another chat",
-    });
-  }
-
-  // Cannot reply to deleted message
-  if (repliedMessage.isDeletedForEveryone) {
-    return res.status(400).json({
-      success: false,
-      message: "Cannot reply to deleted message",
-    });
-  }
-}
+      if (repliedMessage.isDeletedForEveryone) {
+        return res.status(400).json({
+          success: false,
+          message: "Cannot reply to deleted message",
+        });
+      }
+    }
 
     const message = await Message.create({
-
       chat: chatId,
-
       sender: req.user._id,
-
       text,
-
-      attachments,
-
+      attachment,
       replyTo,
-
       seenBy: [req.user._id],
-
+      deliveredTo: [req.user._id],
     });
 
     chat.lastMessage = message._id;
+    chat.lastActivity = new Date();
 
     await chat.save();
 
     const populatedMessage = await Message.findById(message._id)
-      .populate("sender", "-password")
-      .populate("replyTo");
+  .populate("sender", "fullName username profilePic")
+  .populate("chat")
+  .populate({
+    path: "replyTo",
+    populate: {
+      path: "sender",
+      select: "fullName username profilePic",
+    },
+  });
+
+    const io = getIO();
+
+    io.to(chatId).emit(
+      "receive-message",
+      populatedMessage
+    );
 
     return res.status(201).json({
-
       success: true,
-
       message: "Message sent successfully",
-
       data: populatedMessage,
-
     });
 
   } catch (error) {
-
     console.log(error);
 
     return res.status(500).json({
       success: false,
       message: "Server Error",
     });
-
   }
 };
-
 
 
 exports.getMessages = async (req, res) => {
@@ -159,21 +157,23 @@ exports.getMessages = async (req, res) => {
   deletedFor: {
     $ne: req.user._id,
   },
-   })
-      .populate("sender", "fullName username profilePic")
-      .populate({
+})
+.populate("sender", "fullName username profilePic")
+.populate({
   path: "replyTo",
-  select: "text sender isDeletedForEveryone attachments",
   populate: {
     path: "sender",
     select: "fullName username profilePic",
   },
 })
+.sort({
+  createdAt: 1,
+})
       .sort({ createdAt: 1 });
 
     return res.status(200).json({
       success: true,
-      messages,
+      data: messages,
     });
 
   } catch (error) {
@@ -191,7 +191,6 @@ exports.getMessages = async (req, res) => {
 
 exports.editMessage = async (req, res) => {
   try {
-
     const { messageId } = req.params;
     const { text } = req.body;
 
@@ -224,19 +223,19 @@ exports.editMessage = async (req, res) => {
         message: "You can only edit your own messages",
       });
     }
-  // limited time to edit the message after sending it, for example 15 minutes
-   const EDIT_WINDOW =
-  Number(process.env.EDIT_WINDOW_MINUTES) * 60 * 1000;// 15 minutes
 
-const canEdit =
-  Date.now() - new Date(message.createdAt).getTime() <= EDIT_WINDOW;
+    const EDIT_WINDOW =
+      Number(process.env.EDIT_WINDOW_MINUTES) * 60 * 1000;
 
-if (!canEdit) {
-  return res.status(400).json({
-    success: false,
-    message: "Edit time has expired",
-  });
-}
+    const canEdit =
+      Date.now() - new Date(message.createdAt).getTime() <= EDIT_WINDOW;
+
+    if (!canEdit) {
+      return res.status(400).json({
+        success: false,
+        message: "Edit time has expired",
+      });
+    }
 
     message.text = text.trim();
     message.isEdited = true;
@@ -252,6 +251,13 @@ if (!canEdit) {
           select: "fullName username profilePic",
         },
       });
+
+    const io = getIO();
+
+    io.to(message.chat.toString()).emit(
+      "message-edited",
+      updatedMessage
+    );
 
     return res.status(200).json({
       success: true,
@@ -270,7 +276,6 @@ if (!canEdit) {
 
   }
 };
-
 
 exports.deleteForMe = async (req, res) => {
   try {
@@ -316,9 +321,18 @@ exports.deleteForMe = async (req, res) => {
 
 exports.deleteForEveryone = async (req, res) => {
   try {
+const { messageId } = req.params;
 
-    const { messageId } = req.params;
-    const DELETE_WINDOW =
+const message = await Message.findById(messageId);
+
+if (!message) {
+  return res.status(404).json({
+    success: false,
+    message: "Message not found",
+  });
+}
+
+const DELETE_WINDOW =
   Number(process.env.DELETE_WINDOW_MINUTES) * 60 * 1000;
 
 const canDelete =
@@ -329,9 +343,10 @@ if (!canDelete) {
     success: false,
     message: "Delete time has expired",
   });
+
 }
 
-    const message = await Message.findById(messageId);
+  
 
     if (!message) {
       return res.status(404).json({
@@ -349,7 +364,7 @@ if (!canDelete) {
 
     message.text = "";
 
-    message.attachments = [];
+    message.attachment = null;
 
     message.replyTo = null;
 
@@ -358,6 +373,14 @@ if (!canDelete) {
     message.isDeletedForEveryone = true;
 
     await message.save();
+    const io = getIO();
+
+io.to(message.chat.toString()).emit(
+  "message-deleted",
+  {
+    messageId: message._id,
+  }
+);
 
     return res.status(200).json({
       success:true,
@@ -380,7 +403,6 @@ if (!canDelete) {
 
 exports.toggleReaction = async (req, res) => {
   try {
-
     const { messageId } = req.params;
     const { emoji } = req.body;
 
@@ -400,30 +422,34 @@ exports.toggleReaction = async (req, res) => {
       });
     }
 
-    // Check if user already reacted
-    const existingReactionIndex = message.reactions.findIndex(
-      (reaction) => reaction.user.equals(req.user._id)
-    );
+    const existingReactionIndex =
+      message.reactions.findIndex(
+        (reaction) =>
+          reaction.user.equals(req.user._id)
+      );
 
     if (existingReactionIndex !== -1) {
 
-      // Same emoji -> remove reaction
       if (
-        message.reactions[existingReactionIndex].emoji === emoji
+        message.reactions[existingReactionIndex].emoji ===
+        emoji
       ) {
 
-        message.reactions.splice(existingReactionIndex, 1);
+        message.reactions.splice(
+          existingReactionIndex,
+          1
+        );
 
       } else {
 
-        // Different emoji -> update reaction
-        message.reactions[existingReactionIndex].emoji = emoji;
+        message.reactions[
+          existingReactionIndex
+        ].emoji = emoji;
 
       }
 
     } else {
 
-      // New reaction
       message.reactions.push({
         user: req.user._id,
         emoji,
@@ -435,6 +461,13 @@ exports.toggleReaction = async (req, res) => {
 
     const updatedMessage = await Message.findById(messageId)
       .populate("sender", "fullName username profilePic");
+
+    const io = getIO();
+
+    io.to(message.chat.toString()).emit(
+      "reaction-updated",
+      updatedMessage
+    );
 
     return res.status(200).json({
       success: true,
@@ -494,6 +527,15 @@ exports.markAsSeen = async (req, res) => {
         },
       }
     );
+    const io = getIO();
+
+io.to(chatId).emit(
+  "messages-seen",
+  {
+    chatId,
+    userId: req.user._id,
+  }
+);
 
     return res.status(200).json({
       success: true,
@@ -509,5 +551,221 @@ exports.markAsSeen = async (req, res) => {
       message: "Server Error",
     });
 
+  }
+};
+
+exports.searchMessages = async (req, res) => {
+
+  try {
+
+    const { chatId } = req.params;
+    const { query } = req.query;
+
+    if (!query) {
+      return res.status(400).json({
+        success: false,
+        message: "Search query is required",
+      });
+    }
+
+    const messages = await Message.find({
+      chat: chatId,
+      text: {
+        $regex: query,
+        $options: "i",
+      },
+      deletedFor: {
+        $ne: req.user._id,
+      },
+    })
+      .populate("sender", "fullName username profilePic")
+      .sort({ createdAt: 1 });
+
+    return res.status(200).json({
+      success: true,
+      message: "Messages fetched successfully",
+      data: messages,
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+
+  }
+
+};
+
+exports.toggleStarMessage = async (req, res) => {
+
+  try {
+
+    const { messageId } = req.params;
+
+    const message = await Message.findById(messageId);
+
+    if (!message) {
+      return res.status(404).json({
+        success: false,
+        message: "Message not found",
+      });
+    }
+
+    const starred = message.starredBy.some(
+      id => id.toString() === req.user._id.toString()
+    );
+
+    if (starred) {
+      message.starredBy.pull(req.user._id);
+    } else {
+      message.starredBy.addToSet(req.user._id);
+    }
+
+    await message.save();
+
+    return res.status(200).json({
+      success: true,
+      message: starred
+        ? "Message unstarred"
+        : "Message starred",
+      data: message,
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+
+  }
+
+};
+
+
+exports.pinMessage = async (req, res) => {
+
+  try {
+
+    const { messageId } = req.params;
+
+    const message = await Message.findById(messageId);
+
+    if (!message) {
+      return res.status(404).json({
+        success: false,
+        message: "Message not found",
+      });
+    }
+
+    message.pinned = !message.pinned;
+
+    await message.save();
+
+    return res.status(200).json({
+      success: true,
+      message: message.pinned
+        ? "Message pinned"
+        : "Message unpinned",
+      data: message,
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+
+  }
+
+};
+
+
+exports.toggleStarMessage = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+
+    const message = await Message.findById(messageId);
+
+    if (!message) {
+      return res.status(404).json({
+        success: false,
+        message: "Message not found",
+      });
+    }
+
+    const alreadyStarred = message.starredBy.some(
+      (id) => id.toString() === req.user._id.toString()
+    );
+
+    if (alreadyStarred) {
+      message.starredBy.pull(req.user._id);
+    } else {
+      message.starredBy.addToSet(req.user._id);
+    }
+
+    await message.save();
+
+    return res.status(200).json({
+      success: true,
+      message: alreadyStarred
+        ? "Message unstarred"
+        : "Message starred",
+      data: message,
+    });
+
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
+
+
+exports.togglePinMessage = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+
+    const message = await Message.findById(messageId);
+
+    if (!message) {
+      return res.status(404).json({
+        success: false,
+        message: "Message not found",
+      });
+    }
+
+    message.pinned = !message.pinned;
+
+    await message.save();
+
+    return res.status(200).json({
+      success: true,
+      message: message.pinned
+        ? "Message pinned"
+        : "Message unpinned",
+      data: message,
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
   }
 };

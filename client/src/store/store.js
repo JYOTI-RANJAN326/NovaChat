@@ -1,19 +1,17 @@
 import { configureStore } from "@reduxjs/toolkit";
-
-import authReducer from "../slices/authSlice";
-import userReducer from "../slices/userSlice";
-import chatReducer from "../slices/chatSlice";
-import messageReducer from "../slices/messageSlice";
 import socketReducer from "../slices/socketSlice";
-import aiReducer from "../slices/aiSlice";
+import authReducer from "../slices/authSlice";
+import replyReducer from "../slices/replySlice";
+import editMessageReducer from "../slices/editMessageSlice";
+import callReducer from "../slices/callSlice";
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
-    user: userReducer,
-    chat: chatReducer,
-    message: messageReducer,
     socket: socketReducer,
-    ai: aiReducer,
+    reply: replyReducer,
+    editMessage: editMessageReducer,
+    socket: socketReducer,
+    call: callReducer,
   },
 });

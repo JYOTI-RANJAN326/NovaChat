@@ -1,78 +1,50 @@
-import toast from "react-hot-toast";
+import axios from "axios";
 
-import { axiosInstance } from "./apiConnector";
+const BASE_URL = "http://localhost:5000/api/v1/auth";
 
-import {
-  setLoading,
-  setToken,
-} from "../slices/authSlice";
-
-import {
-  setUser,
-} from "../slices/userSlice";
-
-import { socket } from "./socket";
-
-export const login = async (
-  data,
-  dispatch,
-  navigate
-) => {
-
-  try {
-
-    dispatch(setLoading(true));
-
-    const response =
-      await axiosInstance.post(
-        "/auth/login",
-        data
-      );
-
-    if (!response.data.success) {
-      throw new Error();
+export const signupAPI = async (data) => {
+  const response = await axios.post(
+    `${BASE_URL}/signup`,
+    data,
+    {
+      withCredentials: true,
     }
+  );
 
-    dispatch(
-      setToken(response.data.token)
-    );
+  return response.data;
+};
 
-    dispatch(
-      setUser(response.data.user)
-    );
+export const loginAPI = async (data) => {
+  const response = await axios.post(
+    `${BASE_URL}/login`,
+    data,
+    {
+      withCredentials: true,
+    }
+  );
 
-    localStorage.setItem(
-      "token",
-      JSON.stringify(response.data.token)
-    );
+  return response.data;
+};
 
-    localStorage.setItem(
-      "user",
-      JSON.stringify(response.data.user)
-    );
+export const logoutAPI = async () => {
+  const response = await axios.post(
+    `${BASE_URL}/logout`,
+    {},
+    {
+      withCredentials: true,
+    }
+  );
 
-    socket.connect();
+  return response.data;
+};
 
-    socket.emit(
-      "setup",
-      response.data.user._id
-    );
+export const getCurrentUserAPI = async () => {
+  const response = await axios.get(
+    `${BASE_URL}/me`,
+    {
+      withCredentials: true,
+    }
+  );
 
-    toast.success("Login Successful");
-
-    navigate("/chat");
-
-  } catch (error) {
-
-    toast.error(
-      error?.response?.data?.message ||
-      "Login Failed"
-    );
-
-  } finally {
-
-    dispatch(setLoading(false));
-
-  }
-
+  return response.data;
 };

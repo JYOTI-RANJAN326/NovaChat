@@ -1,57 +1,70 @@
-import ChatLayout from "../layouts/ChatLayout";
-import Sidebar from "../components/chat/sidebar/Sidebar";
-import ChatHeader from "../components/chat/chatWindow/ChatHeader";
-import Messages from "../components/chat/chatWindow/Messages";
-import MessageInput from "../components/chat/chatWindow/MessageInput";
+import { useState } from "react";
+import { useSelector } from "react-redux";
 
-function Chat() {
+import Sidebar from "../components/Chat/Sidebar";
+import ChatList from "../components/Chat/ChatList";
+import ChatWindow from "../components/Chat/ChatWindow";
+
+import useSocket from "../hooks/useSocket";
+
+const Chat = () => {
+  const [selectedChat, setSelectedChat] = useState(null);
+
+  const { user } = useSelector((state) => state.auth);
+
+  useSocket(user?._id);
+
   return (
-    <ChatLayout>
+    <div
+      className="
+      h-screen
+      overflow-hidden
+      bg-gradient-to-br
+      from-[#030712]
+      via-[#0B1120]
+      to-[#111827]
+      p-4
+    "
+    >
+      {/* Ambient Glow */}
+
+      <div className="pointer-events-none absolute left-20 top-10 h-72 w-72 rounded-full bg-cyan-500/10 blur-[140px]" />
+
+      <div className="pointer-events-none absolute bottom-0 right-0 h-96 w-96 rounded-full bg-blue-600/10 blur-[160px]" />
 
       <div
         className="
-        grid
+        relative
+        flex
         h-full
-        grid-cols-[100px_360px_1fr_380px]
-        "
+        overflow-hidden
+        rounded-[28px]
+        border
+        border-white/10
+        bg-white/[0.03]
+        shadow-[0_25px_80px_rgba(0,0,0,0.45)]
+        backdrop-blur-3xl
+      "
       >
+        {/* Sidebar */}
 
-        <div className="border-r border-[#1B2748]">
+        <Sidebar />
 
-         <Sidebar/>
+        {/* Chat List */}
 
-        </div>
+        <ChatList
+          selectedChat={selectedChat}
+          setSelectedChat={setSelectedChat}
+        />
 
-        <div className="border-r border-slate-800">
+        {/* Chat Window */}
 
-          Chat List
-
-        </div>
-
-        <div>
-
-          <div className="flex h-full flex-col">
-
-    <ChatHeader/>
-
-    <Messages/>
-
-    <MessageInput/>
-
+       <div className="flex flex-1 flex-col overflow-hidden bg-[#0B1120]/40">
+  <ChatWindow selectedChat={selectedChat} />
 </div>
-
-        </div>
-
-        <div className="border-l border-slate-800">
-
-          AI Panel
-
-        </div>
-
       </div>
-
-    </ChatLayout>
+    </div>
   );
-}
+};
 
 export default Chat;
