@@ -59,7 +59,7 @@ const attachmentSchema = new mongoose.Schema(
 
     duration: {
       type: Number,
-      default: 0, // seconds (for audio/video)
+      default: 0,
     },
   },
   { _id: false }
@@ -76,7 +76,7 @@ const messageSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Chat",
       required: true,
-      index: true,
+      //index: true,
     },
 
     // Sender
@@ -84,19 +84,20 @@ const messageSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+     // index: true,
     },
 
-    // Text
+    // Message Text
     text: {
       type: String,
       trim: true,
       default: "",
     },
 
-    // Attachment
-    attachment: {
-      type: attachmentSchema,
-      default: null,
+    // Multiple Attachments
+    attachments: {
+      type: [attachmentSchema],
+      default: [],
     },
 
     // Reply
@@ -106,37 +107,78 @@ const messageSchema = new mongoose.Schema(
       default: null,
     },
 
+    // Mentions
+   mentions: {
+  type: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+  ],
+  default: [],
+},
+
     // Emoji Reactions
-    reactions: [reactionSchema],
+   reactions: {
+  type: [reactionSchema],
+  default: [],
+},
 
     // Seen
-    seenBy: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
+    seenBy: {
+  type: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+  ],
+  default: [],
+},
 
     // Delivered
-    deliveredTo: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
+   deliveredTo: {
+  type: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+  ],
+  default: [],
+},
+
+    // Status
+    status: {
+      type: String,
+      enum: [
+        "sending",
+        "sent",
+        "delivered",
+        "seen",
+        "failed",
+      ],
+      default: "sent",
+    },
 
     // Delete For Me
-    deletedFor: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
+    deletedFor: {
+  type: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+  ],
+  default: [],
+},
 
     // Delete For Everyone
     isDeletedForEveryone: {
       type: Boolean,
       default: false,
+    },
+
+    deletedAt: {
+      type: Date,
+      default: null,
     },
 
     // Edited
@@ -145,19 +187,52 @@ const messageSchema = new mongoose.Schema(
       default: false,
     },
 
+    editedAt: {
+      type: Date,
+      default: null,
+    },
+
     // Starred
-    starredBy: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
+   starredBy: {
+  type: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+  ],
+  default: [],
+},
 
     // Pinned
     pinned: {
       type: Boolean,
       default: false,
     },
+
+    // Forwarded
+    isForwarded: {
+      type: Boolean,
+      default: false,
+    },
+
+    forwardedFrom: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+
+    // Voice Note
+    isVoiceNote: {
+      type: Boolean,
+      default: false,
+    },
+
+    // Expiring Messages (Future Feature)
+    expiresAt: {
+      type: Date,
+      default: null,
+    },
+   
   },
   {
     timestamps: true,
@@ -168,20 +243,62 @@ const messageSchema = new mongoose.Schema(
 // Indexes
 // =======================================
 
+// Fetch messages of a chat (latest first)
 messageSchema.index({
   chat: 1,
   createdAt: -1,
 });
 
+// Fetch messages sent by a user
 messageSchema.index({
   sender: 1,
 });
 
+// Fetch messages of a specific sender in a chat
+messageSchema.index({
+  chat: 1,
+  sender: 1,
+});
+
+// Full-text search on message text
 messageSchema.index({
   text: "text",
 });
 
-module.exports = mongoose.model(
-  "Message",
-  messageSchema
+// TTL index for disappearing messages
+// Messages with expiresAt = null will not be deleted.
+messageSchema.index(
+  {
+    expiresAt: 1,
+  },
+  {
+    expireAfterSeconds: 0,
+  }
 );
+messageSchema.pre("validate", function () {
+
+    // Skip validation for deleted messages
+    if (this.isDeletedForEveryone) {
+        return;
+    }
+
+    const hasText =
+        this.text && this.text.trim().length > 0;
+
+    const hasAttachment =
+        Array.isArray(this.attachments) &&
+        this.attachments.length > 0;
+
+    if (!hasText && !hasAttachment) {
+        throw new Error(
+            "Message must contain text or an attachment."
+        );
+    }
+});
+
+messageSchema.virtual("attachmentCount").get(function () {
+    return this.attachments.length;
+});
+
+
+module.exports = mongoose.model("Message", messageSchema);

@@ -14,6 +14,11 @@ const {
     markAsSeen,
     toggleStarMessage,
     togglePinMessage,
+    forwardMessage,
+    replyMessage,
+    searchMessages,
+    getStarredMessages,
+    getPinnedMessages,
 } = require("../controllers/message.controller");
 
 router.post("/", protect, sendMessage);
@@ -33,5 +38,30 @@ router.patch(
   "/:messageId/pin",
   protect,
   togglePinMessage
+);
+router.post(
+    "/:messageId/forward",
+    protect,
+    forwardMessage
+);
+router.post(
+    "/reply",
+    protect,
+    replyMessage
+);
+router.get(
+    "/search/:chatId",
+    protect,
+    searchMessages
+);
+router.get(
+    "/starred/all",
+    protect,
+    getStarredMessages
+);
+router.get(
+    "/pinned/:chatId",
+    protect,
+    getPinnedMessages
 );
 module.exports = router;

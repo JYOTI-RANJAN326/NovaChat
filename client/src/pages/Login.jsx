@@ -1,166 +1,82 @@
-// // // // import HeroSection from "../components/Auth/HeroSection";
-// // // // import LoginCard from "../components/Auth/LoginCard";
 
-// // // // const Login = () => {
-// // // //   return (
-// // // //     <div className="relative h-screen overflow-hidden bg-[#020817]">
-
-// // // //       {/* Background Glow */}
-
-// // // //       <div className="absolute inset-0">
-
-// // // //         <div className="absolute -left-52 -top-52 h-[550px] w-[550px] rounded-full bg-cyan-500/10 blur-[180px]" />
-
-// // // //         <div className="absolute -right-52 bottom-0 h-[550px] w-[550px] rounded-full bg-blue-600/10 blur-[180px]" />
-
-// // // //         <div className="absolute left-1/2 top-0 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-sky-400/5 blur-[180px]" />
-
-// // // //       </div>
-
-// // // //       <div className="relative h-screen w-screen">
-
-// // // //         <div className="grid h-full grid-cols-[54%_46%]">
-
-// // // //           <div className="hidden xl:flex">
-// // // //             <HeroSection />
-// // // //           </div>
-
-// // // //           <div className="flex items-center justify-center px-10 py-10">
-// // // //             <LoginCard />
-// // // //           </div>
-
-// // // //         </div>
-
-// // // //       </div>
-
-// // // //     </div>
-// // // //   );
-// // // // };
-
-// // // // export default Login;
-
-
-// // // import HeroSection from "../components/Auth/HeroSection";
-// // // import LoginCard from "../components/Auth/LoginCard";
-
-// // // const Login = () => {
-// // //   return (
-// // //     <div className="relative h-screen w-full overflow-hidden bg-[#020817]">
-
-// // //       {/* Background Glow */}
-
-// // //       <div className="absolute inset-0">
-// // //         <div className="absolute -left-52 -top-52 h-[550px] w-[550px] rounded-full bg-cyan-500/10 blur-[180px]" />
-// // //         <div className="absolute -right-52 bottom-0 h-[550px] w-[550px] rounded-full bg-blue-600/10 blur-[180px]" />
-// // //         <div className="absolute left-1/2 top-0 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-sky-400/5 blur-[180px]" />
-// // //       </div>
-
-// // //       <div className="relative h-full w-full">
-// // //         <div className="grid h-full grid-cols-[54%_46%]">
-
-// // //           <div className="hidden xl:flex overflow-hidden">
-// // //             <HeroSection />
-// // //           </div>
-
-// // //           <div className="flex items-center justify-center px-10 py-10">
-// // //             <LoginCard />
-// // //           </div>
-
-// // //         </div>
-// // //       </div>
-
-// // //     </div>
-// // //   );
-// // // };
-
-// // // export default Login;
-
-
-// // import HeroSection from "../components/Auth/HeroSection";
-// // import LoginCard from "../components/Auth/LoginCard";
-
-// // const Login = () => {
-// //   return (
-// //     <div className="relative h-screen w-full pl-16 pr-8 overflow-hidden bg-[#020817]">
-
-// //       {/* Background Glow */}
-
-// //       <div className="absolute inset-0">
-// //         <div className="absolute -left-52 -top-52 h-[550px] w-[550px] rounded-full bg-cyan-500/10 blur-[180px]" />
-// //         <div className="absolute -right-52 bottom-0 h-[550px] w-[550px] rounded-full bg-blue-600/10 blur-[180px]" />
-// //         <div className="absolute left-1/2 top-0 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-sky-400/5 blur-[180px]" />
-// //       </div>
-
-// //       <div className="relative h-full w-full pl-16 pr-8 p-8">
-// //         <div className="grid h-full grid-cols-[54%_46%] gap-6">
-
-// //           <div className="hidden xl:flex overflow-hidden">
-// //             <HeroSection />
-// //           </div>
-
-// //           <div className="flex items-center justify-center">
-// //             <LoginCard />
-// //           </div>
-
-// //         </div>
-// //       </div>
-
-// //     </div>
-// //   );
-// // };
-
-// // export default Login;
-
-
-// import HeroSection from "../components/Auth/HeroSection";
-// import LoginCard from "../components/Auth/LoginCard";
-// import AuthLayout from "../components/Auth/AuthLayout";
-
-// const Login = () => {
-//   return (
-//     <AuthLayout>
-//       <div className="hidden xl:flex overflow-hidden">
-//         <HeroSection />
-//       </div>
-
-//       <div className="flex items-center justify-center">
-//         <LoginCard />
-//       </div>
-//     </AuthLayout>
-//   );
-// };
-
-// export default Login;
 
 
 import HeroSection from "../components/Auth/HeroSection";
 import LoginCard from "../components/Auth/LoginCard";
-
+import earthBg from "../assets/background/earthBg.png";
 const Login = () => {
   return (
-    <div className="min-h-screen w-full bg-[#020817] p-6">
-      <div className="relative h-[calc(100vh-3rem)] w-full overflow-hidden rounded-[28px] border border-white/10">
+    <div className="relative min-h-screen overflow-hidden bg-[#020817]">
+     {/* Background Gradient */}
+<div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,#0ea5e922,transparent_28%),radial-gradient(circle_at_bottom_right,#2563eb22,transparent_30%),linear-gradient(to_bottom,#030712,#020617)]" />
 
-        <div className="absolute inset-0">
-          <div className="absolute -left-52 -top-52 h-[550px] w-[550px] rounded-full bg-cyan-500/10 blur-[180px]" />
-          <div className="absolute -right-52 bottom-0 h-[550px] w-[550px] rounded-full bg-blue-600/10 blur-[180px]" />
-          <div className="absolute left-1/2 top-0 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-sky-400/5 blur-[180px]" />
-        </div>
+{/* Top Left Glow */}
+<div className="absolute -left-44 -top-40 h-[520px] w-[520px] rounded-full bg-cyan-500/10 blur-[170px]" />
 
-        <div className="relative h-full w-full pl-16 pr-8 py-10">
-          <div className="grid h-full grid-cols-[54%_46%] gap-6">
+{/* Right Glow */}
+<div className="absolute -right-52 top-1/2 h-[650px] w-[650px] -translate-y-1/2 rounded-full bg-blue-500/10 blur-[180px]" />
 
-            <div className="hidden xl:flex overflow-hidden">
+{/* Planet Glow */}
+<div className="absolute left-1/2 bottom-[-150px] h-[620px] w-[620px] -translate-x-1/2 rounded-full bg-cyan-500/10 blur-[160px]" />
+
+{/* Planet */}
+<div
+  className="absolute left-1/2 bottom-[-220px] h-[560px] w-[560px] -translate-x-1/2 rounded-full"
+  style={{
+    background:
+      "radial-gradient(circle at 28% 28%, #7dd3fc 0%, #3b82f6 35%, #1d4ed8 60%, #020617 84%, transparent 100%)",
+    boxShadow:
+      "0 0 140px rgba(59,130,246,.35), inset -40px -40px 80px rgba(0,0,0,.45)",
+  }}
+/>
+
+      {/* Main Content */}
+      <div className="relative z-10 p-6">
+        <div
+          className="
+            mx-auto
+            min-h-[calc(100vh-48px)]
+            max-w-[1800px]
+            rounded-[30px]
+            border
+            border-white/10
+            bg-[#070d1b]/65
+            backdrop-blur-xl
+            shadow-[0_0_60px_rgba(0,170,255,.08)]
+            overflow-hidden
+          "
+        >
+          <div
+            className="
+              grid
+              min-h-[100vh]
+              w-full
+              h-full
+              xl:grid-cols-[52%_48%]
+            "
+          >
+            {/* Background Image */}
+<div className="absolute inset-0">
+  <img
+    src={earthBg}
+    alt="Background"
+    className="h-full w-full object-cover object-center select-none pointer-events-none"
+  />
+</div>
+
+{/* Dark Overlay */}
+<div className="absolute inset-0 bg-black/35" />
+            {/* Hero */}
+            <div className="hidden lg:flex items-center pl-16 pr-8 py-10">
               <HeroSection />
             </div>
 
-            <div className="flex items-center justify-center">
+            {/* Login */}
+            <div className="flex items-center justify-center px-5 sm:px-8 md:px-10 lg:px-12 py-10 ">
               <LoginCard />
             </div>
-
           </div>
         </div>
-
       </div>
     </div>
   );

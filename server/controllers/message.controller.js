@@ -7,11 +7,11 @@ const { getIO } = require("../socket/socket");
 exports.sendMessage = async (req, res) => {
   try {
     const {
-      chatId,
-      text,
-      attachment = null,
-      replyTo = null,
-    } = req.body;
+    chatId,
+    text,
+    attachments = [],
+    replyTo = null,
+} = req.body;
 
     if (!chatId) {
       return res.status(400).json({
@@ -23,7 +23,7 @@ exports.sendMessage = async (req, res) => {
     // At least one of text or attachment
     const hasText = text && text.trim().length > 0;
 
-    if (!hasText && !attachment) {
+    if (!hasText && !attachments.length === 0) {
       return res.status(400).json({
         success: false,
         message: "Message cannot be empty",
@@ -81,7 +81,7 @@ exports.sendMessage = async (req, res) => {
       chat: chatId,
       sender: req.user._id,
       text,
-      attachment,
+      attachments,
       replyTo,
       seenBy: [req.user._id],
       deliveredTo: [req.user._id],
@@ -128,9 +128,15 @@ exports.sendMessage = async (req, res) => {
 
 
 exports.getMessages = async (req, res) => {
+   console.log("🔥 getMessages called");
+  console.log("chatId:", req.params.chatId);
+  console.log("user:", req.user?._id);
+
   try {
 
     const { chatId } = req.params;
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 30;
 
     const chat = await Chat.findById(chatId);
 
@@ -153,23 +159,24 @@ exports.getMessages = async (req, res) => {
     }
 
   const messages = await Message.find({
-  chat: chatId,
-  deletedFor: {
-    $ne: req.user._id,
-  },
+    chat: chatId,
+    deletedFor: {
+        $ne: req.user._id,
+    },
 })
+.sort({ createdAt: 1 })
+.skip((page - 1) * limit)
+.limit(limit)
 .populate("sender", "fullName username profilePic")
 .populate({
-  path: "replyTo",
-  populate: {
-    path: "sender",
-    select: "fullName username profilePic",
-  },
+    path: "replyTo",
+    populate: {
+        path: "sender",
+        select: "fullName username profilePic",
+    },
 })
-.sort({
-  createdAt: 1,
-})
-      .sort({ createdAt: 1 });
+
+      
 
     return res.status(200).json({
       success: true,
@@ -239,7 +246,7 @@ exports.editMessage = async (req, res) => {
 
     message.text = text.trim();
     message.isEdited = true;
-
+    message.editedAt = new Date();
     await message.save();
 
     const updatedMessage = await Message.findById(message._id)
@@ -364,13 +371,14 @@ if (!canDelete) {
 
     message.text = "";
 
-    message.attachment = null;
+   message.attachments = [];
 
     message.replyTo = null;
 
     message.reactions = [];
 
     message.isDeletedForEveryone = true;
+    message.deletedAt = new Date();
 
     await message.save();
     const io = getIO();
@@ -567,7 +575,25 @@ exports.searchMessages = async (req, res) => {
         message: "Search query is required",
       });
     }
+    const chat = await Chat.findById(chatId);
 
+if (!chat) {
+    return res.status(404).json({
+        success: false,
+        message: "Chat not found",
+    });
+}
+
+const isParticipant = chat.participants.some(member =>
+    member.equals(req.user._id)
+);
+
+if (!isParticipant) {
+    return res.status(403).json({
+        success: false,
+        message: "You are not a participant of this chat",
+    });
+}
     const messages = await Message.find({
       chat: chatId,
       text: {
@@ -649,89 +675,8 @@ exports.toggleStarMessage = async (req, res) => {
 };
 
 
-exports.pinMessage = async (req, res) => {
-
-  try {
-
-    const { messageId } = req.params;
-
-    const message = await Message.findById(messageId);
-
-    if (!message) {
-      return res.status(404).json({
-        success: false,
-        message: "Message not found",
-      });
-    }
-
-    message.pinned = !message.pinned;
-
-    await message.save();
-
-    return res.status(200).json({
-      success: true,
-      message: message.pinned
-        ? "Message pinned"
-        : "Message unpinned",
-      data: message,
-    });
-
-  } catch (error) {
-
-    console.log(error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Server Error",
-    });
-
-  }
-
-};
 
 
-exports.toggleStarMessage = async (req, res) => {
-  try {
-    const { messageId } = req.params;
-
-    const message = await Message.findById(messageId);
-
-    if (!message) {
-      return res.status(404).json({
-        success: false,
-        message: "Message not found",
-      });
-    }
-
-    const alreadyStarred = message.starredBy.some(
-      (id) => id.toString() === req.user._id.toString()
-    );
-
-    if (alreadyStarred) {
-      message.starredBy.pull(req.user._id);
-    } else {
-      message.starredBy.addToSet(req.user._id);
-    }
-
-    await message.save();
-
-    return res.status(200).json({
-      success: true,
-      message: alreadyStarred
-        ? "Message unstarred"
-        : "Message starred",
-      data: message,
-    });
-
-  } catch (error) {
-    console.log(error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Server Error",
-    });
-  }
-};
 
 
 exports.togglePinMessage = async (req, res) => {
@@ -766,6 +711,234 @@ exports.togglePinMessage = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Server Error",
+    });
+  }
+};
+
+
+exports.getStarredMessages = async (req, res) => {
+    try {
+        const messages = await Message.find({
+            starredBy: req.user._id,
+            deletedFor: { $ne: req.user._id },
+        })
+            .populate("sender", "fullName username profilePic")
+            .populate("chat")
+            .sort({ createdAt: -1 });
+
+        return res.status(200).json({
+            success: true,
+            data: messages,
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            message: "Server Error",
+        });
+    }
+};
+
+
+exports.getPinnedMessages = async (req, res) => {
+    try {
+        const { chatId } = req.params;
+
+        const messages = await Message.find({
+            chat: chatId,
+            pinned: true,
+            deletedFor: { $ne: req.user._id },
+        })
+            .populate("sender", "fullName username profilePic")
+            .sort({ createdAt: -1 });
+
+        return res.status(200).json({
+            success: true,
+            data: messages,
+        });
+
+    } catch (error) {
+        console.log(error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Server Error",
+        });
+    }
+};
+
+// =======================================
+// Forward Message
+// =======================================
+
+exports.forwardMessage = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const { chatId } = req.body;
+
+    if (!chatId) {
+      return res.status(400).json({
+        success: false,
+        message: "Destination chat is required.",
+      });
+    }
+
+    // Original message
+    const originalMessage = await Message.findById(messageId);
+
+    if (!originalMessage) {
+      return res.status(404).json({
+        success: false,
+        message: "Message not found.",
+      });
+    }
+
+    // Verify user belongs to destination chat
+    const destinationChat = await Chat.findById(chatId);
+
+    if (!destinationChat) {
+      return res.status(404).json({
+        success: false,
+        message: "Destination chat not found.",
+      });
+    }
+
+    const isParticipant = destinationChat.participants.some(
+      (member) => member.toString() === req.user._id.toString()
+    );
+
+    if (!isParticipant) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied.",
+      });
+    }
+
+    // Create forwarded message
+    const forwardedMessage = await Message.create({
+      chat: chatId,
+      sender: req.user._id,
+      text: originalMessage.text,
+      attachments: originalMessage.attachments,
+      mentions: [],
+      isForwarded: true,
+      forwardedFrom: originalMessage.sender,
+      status: "sent",
+    });
+
+    const populatedMessage = await Message.findById(forwardedMessage._id)
+      .populate("sender", "name username profilePicture")
+      .populate("forwardedFrom", "name username profilePicture")
+      .populate("replyTo");
+
+    return res.status(201).json({
+      success: true,
+      message: "Message forwarded successfully.",
+      data: populatedMessage,
+    });
+
+  } catch (error) {
+    console.error("FORWARD MESSAGE ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to forward message.",
+      error: error.message,
+    });
+  }
+};
+
+
+
+// =======================================
+// Reply Message
+// =======================================
+
+exports.replyMessage = async (req, res) => {
+  try {
+    const { chatId, text, attachments = [], replyTo } = req.body;
+
+    if (!chatId || !replyTo) {
+      return res.status(400).json({
+        success: false,
+        message: "Chat ID and reply message ID are required.",
+      });
+    }
+
+    const hasText = text && text.trim().length > 0;
+
+    if (!hasText && attachments.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Message must contain text or an attachment.",
+      });
+    }
+
+    // Verify chat exists
+    const chat = await Chat.findById(chatId);
+
+    if (!chat) {
+      return res.status(404).json({
+        success: false,
+        message: "Chat not found.",
+      });
+    }
+
+    // Verify user is participant
+    const isParticipant = chat.participants.some(
+      (member) => member.toString() === req.user._id.toString()
+    );
+
+    if (!isParticipant) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied.",
+      });
+    }
+
+    // Verify original message exists
+    const originalMessage = await Message.findById(replyTo);
+
+    if (!originalMessage) {
+      return res.status(404).json({
+        success: false,
+        message: "Original message not found.",
+      });
+    }
+
+    // Create reply
+    const message = await Message.create({
+      chat: chatId,
+      sender: req.user._id,
+      text: text?.trim() || "",
+      attachments,
+      replyTo,
+      status: "sent",
+    });
+
+    const populatedMessage = await Message.findById(message._id)
+      .populate("sender", "name username profilePicture")
+      .populate({
+        path: "replyTo",
+        populate: {
+          path: "sender",
+          select: "name username profilePicture",
+        },
+      });
+
+    return res.status(201).json({
+      success: true,
+      message: "Reply sent successfully.",
+      data: populatedMessage,
+    });
+
+  } catch (error) {
+    console.error("REPLY MESSAGE ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to send reply.",
+      error: error.message,
     });
   }
 };

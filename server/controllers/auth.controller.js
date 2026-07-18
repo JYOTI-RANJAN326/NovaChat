@@ -2,17 +2,26 @@ const bcrypt = require("bcrypt");
 const User = require("../models/User");
 const generateToken = require("../utils/generateToken");
 
+// =======================================
+// Signup
+// =======================================
+
 exports.signup = async (req, res) => {
   try {
-    const { fullName, username, email, password } = req.body;
+    let { fullName, username, email, password } = req.body;
 
-    // Check all fields
+    // Validate input
     if (!fullName || !username || !email || !password) {
       return res.status(400).json({
         success: false,
-        message: "All fields are required",
+        message: "All fields are required.",
       });
     }
+
+    // Normalize
+    fullName = fullName.trim();
+    username = username.trim().toLowerCase();
+    email = email.trim().toLowerCase();
 
     // Check email
     const emailExists = await User.findOne({ email });
@@ -20,7 +29,7 @@ exports.signup = async (req, res) => {
     if (emailExists) {
       return res.status(400).json({
         success: false,
-        message: "Email already exists",
+        message: "Email already exists.",
       });
     }
 
@@ -30,7 +39,7 @@ exports.signup = async (req, res) => {
     if (usernameExists) {
       return res.status(400).json({
         success: false,
-        message: "Username already taken",
+        message: "Username already taken.",
       });
     }
 
@@ -39,132 +48,171 @@ exports.signup = async (req, res) => {
 
     // Create user
     const user = await User.create({
-  fullName,
-  username,
-  email,
-  password: hashedPassword,
-});
+      fullName,
+      username,
+      email,
+      password: hashedPassword,
+    });
 
-const userData = user.toObject();
-delete userData.password;
+    const userData = user.toObject();
 
-res.status(201).json({
-  success: true,
-  message: "User Registered Successfully",
-  user: userData,
-});
+    delete userData.password;
+    delete userData.refreshToken;
+
+    return res.status(201).json({
+      success: true,
+      message: "User registered successfully.",
+      user: userData,
+    });
 
   } catch (error) {
 
-    console.log(error);
+    console.error("SIGNUP ERROR:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: "Server Error",
+      message: "Internal server error.",
     });
 
   }
 };
-exports.login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
 
-    // Check fields
+// =======================================
+// Login
+// =======================================
+
+exports.login = async (req, res) => {
+
+  try {
+
+    let { email, password } = req.body;
+
     if (!email || !password) {
       return res.status(400).json({
         success: false,
-        message: "Email and Password are required",
+        message: "Email and password are required.",
       });
     }
 
-    // Find user
-    const user = await User.findOne({ email });
+    email = email.trim().toLowerCase();
+
+    // Password is select:false in User model
+    const user = await User.findOne({ email })
+      .select("+password +refreshToken");
 
     if (!user) {
       return res.status(400).json({
         success: false,
-        message: "User does not exist",
+        message: "User does not exist.",
       });
     }
 
-    // Compare password
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(
+      password,
+      user.password
+    );
 
     if (!isMatch) {
       return res.status(400).json({
         success: false,
-        message: "Invalid Credentials",
+        message: "Invalid credentials.",
       });
     }
 
-    // Generate JWT
     const token = generateToken(user._id);
 
-    // Remove password from response
     const userData = user.toObject();
+
     delete userData.password;
+    delete userData.refreshToken;
 
-    // Send cookie
-   res.cookie("token", token, {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-  maxAge: 7 * 24 * 60 * 60 * 1000,
-});
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite:
+        process.env.NODE_ENV === "production"
+          ? "none"
+          : "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-      message: "Login Successful",
+      message: "Login successful.",
       token,
       user: userData,
     });
 
   } catch (error) {
-    console.log(error);
 
-    res.status(500).json({
+    console.error("LOGIN ERROR:", error);
+
+    return res.status(500).json({
       success: false,
-      message: "Server Error",
+      message: "Internal server error.",
     });
+
   }
+
 };
 
+// =======================================
+// Logout
+// =======================================
 
 exports.logout = async (req, res) => {
+
   try {
+
     res.clearCookie("token", {
       httpOnly: true,
-      sameSite: "lax",
-      secure: false, // true in production (HTTPS)
+      secure: process.env.NODE_ENV === "production",
+      sameSite:
+        process.env.NODE_ENV === "production"
+          ? "none"
+          : "lax",
     });
 
     return res.status(200).json({
       success: true,
-      message: "Logged out successfully",
+      message: "Logged out successfully.",
     });
 
   } catch (error) {
-    console.log(error);
+
+    console.error("LOGOUT ERROR:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Server Error",
+      message: "Internal server error.",
     });
+
   }
+
 };
 
+// =======================================
+// Get Current User
+// =======================================
+
 exports.getCurrentUser = async (req, res) => {
+
   try {
+
     return res.status(200).json({
       success: true,
       data: req.user,
     });
+
   } catch (error) {
-    console.log(error);
+
+    console.error("GET CURRENT USER ERROR:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Server Error",
+      message: "Internal server error.",
     });
+
   }
+
 };

@@ -6,7 +6,7 @@ import {
 } from "react-icons/fi";
 import { useSelector, useDispatch } from "react-redux";
 import { toast } from "react-hot-toast";
-
+import { motion } from "framer-motion";
 import GroupInfo from "./GroupInfo";
 import { socket } from "../../services/socket";
 import { setOutgoingCall } from "../../slices/callSlice";
@@ -67,176 +67,259 @@ const ChatHeader = ({ chat, refreshChat }) => {
   };
 
   return (
-    <>
-      <div
-        className="
-          flex
-          h-[82px]
-          items-center
-          justify-between
-          border-b
-          border-white/10
-          bg-[#0B1324]
-          px-8
-        "
-      >
-        {/* Left */}
-        <div
-          onClick={() =>
-            chat.isGroupChat && setShowGroupInfo(true)
-          }
-          className={`flex items-center gap-4 ${
-            chat.isGroupChat ? "cursor-pointer" : ""
-          }`}
-        >
-          {/* Avatar */}
-          <div className="relative">
-            {chat.isGroupChat ? (
-              <div
-                className="
-                  flex
-                  h-14
-                  w-14
-                  items-center
-                  justify-center
-                  rounded-full
-                  bg-gradient-to-br
-                  from-cyan-500
-                  to-blue-600
-                  text-2xl
-                  text-white
-                "
-              >
-                👥
-              </div>
-            ) : otherUser?.profilePic ? (
-              <img
-                src={otherUser.profilePic}
-                alt={chatName}
-                className="h-14 w-14 rounded-full object-cover"
-              />
-            ) : (
-              <div
-                className="
-                  flex
-                  h-14
-                  w-14
-                  items-center
-                  justify-center
-                  rounded-full
-                  bg-gradient-to-br
-                  from-cyan-500
-                  to-blue-600
-                  text-lg
-                  font-bold
-                  text-white
-                "
-              >
-                {chatName.charAt(0).toUpperCase()}
-              </div>
-            )}
+  <>
+    <header
+      className="
+        sticky
+        top-0
+        z-30
+        flex
+        h-[88px]
+        items-center
+        justify-between
+        border-b
+        border-white/10
+        bg-[#08111F]/80
+        px-8
+        backdrop-blur-3xl
+      "
+    >
+      {/* LEFT */}
 
-            {!chat.isGroupChat && (
-              <div
+      <motion.div
+        whileHover={{ x: 2 }}
+        onClick={() =>
+          chat.isGroupChat && setShowGroupInfo(true)
+        }
+        className={`flex items-center gap-5 ${
+          chat.isGroupChat ? "cursor-pointer" : ""
+        }`}
+      >
+        {/* Avatar */}
+
+        <div className="relative">
+
+          {chat.isGroupChat ? (
+            <div
+              className="
+                flex
+                h-16
+                w-16
+                items-center
+                justify-center
+                rounded-2xl
+                bg-gradient-to-br
+                from-cyan-400
+                via-sky-500
+                to-blue-600
+                text-3xl
+                text-white
+                shadow-[0_0_35px_rgba(34,211,238,.35)]
+              "
+            >
+              👥
+            </div>
+          ) : otherUser?.profilePic ? (
+            <img
+              src={otherUser.profilePic}
+              alt={chatName}
+              className="
+                h-16
+                w-16
+                rounded-2xl
+                object-cover
+                ring-2
+                ring-cyan-500/20
+              "
+            />
+          ) : (
+            <div
+              className="
+                flex
+                h-16
+                w-16
+                items-center
+                justify-center
+                rounded-2xl
+                bg-gradient-to-br
+                from-cyan-400
+                via-sky-500
+                to-blue-600
+                text-2xl
+                font-bold
+                text-white
+                shadow-[0_0_35px_rgba(34,211,238,.35)]
+              "
+            >
+              {chatName.charAt(0).toUpperCase()}
+            </div>
+          )}
+
+          {!chat.isGroupChat && (
+            <span
+              className={`
+                absolute
+                bottom-1
+                right-1
+                h-4
+                w-4
+                rounded-full
+                ring-4
+                ring-[#08111F]
+                ${
+                  isOnline
+                    ? "bg-emerald-400"
+                    : "bg-slate-500"
+                }
+              `}
+            />
+          )}
+        </div>
+
+        {/* Info */}
+
+        <div>
+
+          <h2 className="text-xl font-bold text-white">
+            {chatName}
+          </h2>
+
+          {chat.isGroupChat ? (
+            <div className="mt-1 flex items-center gap-2">
+
+              <span className="rounded-full bg-cyan-500/10 px-3 py-1 text-xs text-cyan-300">
+                Group
+              </span>
+
+              <span className="text-sm text-slate-400">
+                {participants.length} Members
+              </span>
+
+            </div>
+          ) : (
+            <div className="mt-1 flex items-center gap-2">
+
+              <span
                 className={`
-                  absolute
-                  bottom-0
-                  right-0
-                  h-3.5
-                  w-3.5
+                  h-2
+                  w-2
                   rounded-full
-                  border-2
-                  border-[#0B1324]
                   ${
                     isOnline
-                      ? "bg-green-400"
+                      ? "bg-emerald-400"
                       : "bg-slate-500"
                   }
                 `}
               />
-            )}
-          </div>
 
-          {/* Info */}
-          <div>
-            <h2 className="text-lg font-bold text-white">
-              {chatName}
-            </h2>
-
-            {chat.isGroupChat ? (
-              <p className="text-sm text-slate-400">
-                {participants.length} Members
-              </p>
-            ) : (
-              <p
-                className={`text-sm ${
+              <span
+                className={`text-sm font-medium ${
                   isOnline
-                    ? "text-green-400"
+                    ? "text-emerald-400"
                     : "text-slate-400"
                 }`}
               >
                 {isOnline ? "Online" : "Offline"}
-              </p>
-            )}
-          </div>
+              </span>
+
+            </div>
+          )}
+
         </div>
+      </motion.div>
 
-        {/* Right */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleCall}
-            disabled={chat.isGroupChat || !otherUser}
-            className="
-              rounded-xl
-              p-3
-              text-slate-400
-              transition
-              hover:bg-white/5
-              hover:text-cyan-400
-              disabled:cursor-not-allowed
-              disabled:opacity-40
-            "
-          >
-            <FiPhone className="text-xl" />
-          </button>
+      {/* RIGHT */}
 
-          <button
-            className="
-              rounded-xl
-              p-3
-              text-slate-400
-              transition
-              hover:bg-white/5
-              hover:text-cyan-400
-            "
-          >
-            <FiVideo className="text-xl" />
-          </button>
+      <div className="flex items-center gap-3">
 
-          <button
-            className="
-              rounded-xl
-              p-3
-              text-slate-400
-              transition
-              hover:bg-white/5
-              hover:text-cyan-400
-            "
-          >
-            <FiMoreVertical className="text-xl" />
-          </button>
-        </div>
+        <motion.button
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={handleCall}
+          disabled={chat.isGroupChat || !otherUser}
+          className="
+            flex
+            h-12
+            w-12
+            items-center
+            justify-center
+            rounded-2xl
+            border
+            border-white/10
+            bg-white/5
+            text-slate-300
+            backdrop-blur-xl
+            transition-all
+            hover:border-cyan-500/30
+            hover:bg-cyan-500/10
+            hover:text-cyan-300
+            disabled:cursor-not-allowed
+            disabled:opacity-40
+          "
+        >
+          <FiPhone className="text-lg" />
+        </motion.button>
+
+        <motion.button
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.95 }}
+          className="
+            flex
+            h-12
+            w-12
+            items-center
+            justify-center
+            rounded-2xl
+            border
+            border-white/10
+            bg-white/5
+            text-slate-300
+            backdrop-blur-xl
+            transition-all
+            hover:border-cyan-500/30
+            hover:bg-cyan-500/10
+            hover:text-cyan-300
+          "
+        >
+          <FiVideo className="text-lg" />
+        </motion.button>
+
+        <motion.button
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.95 }}
+          className="
+            flex
+            h-12
+            w-12
+            items-center
+            justify-center
+            rounded-2xl
+            border
+            border-white/10
+            bg-white/5
+            text-slate-300
+            backdrop-blur-xl
+            transition-all
+            hover:border-cyan-500/30
+            hover:bg-cyan-500/10
+            hover:text-cyan-300
+          "
+        >
+          <FiMoreVertical className="text-lg" />
+        </motion.button>
+
       </div>
+    </header>
 
-      {showGroupInfo && (
-        <GroupInfo
-          chat={chat}
-          refreshChat={refreshChat}
-          onClose={() => setShowGroupInfo(false)}
-        />
-      )}
-    </>
-  );
+    {showGroupInfo && (
+      <GroupInfo
+        chat={chat}
+        refreshChat={refreshChat}
+        onClose={() => setShowGroupInfo(false)}
+      />
+    )}
+  </>
+);
 };
 
 export default ChatHeader;

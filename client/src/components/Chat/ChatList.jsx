@@ -15,6 +15,7 @@ const ChatList = ({ selectedChat, setSelectedChat }) => {
   const [loading, setLoading] = useState(true);
   const [showGroupModal, setShowGroupModal] =
     useState(false);
+    const [search, setSearch] = useState("");
 
   const { user } = useSelector((state) => state.auth);
 
@@ -33,6 +34,31 @@ const ChatList = ({ selectedChat, setSelectedChat }) => {
     }
   };
 
+
+
+  const filteredChats = chats
+  .filter((chat) => {
+    const chatName = chat.isGroupChat
+      ? chat.chatName
+      : chat.participants.find(
+          (p) => p._id !== user?._id
+        )?.fullName || "";
+
+    return chatName
+      .toLowerCase()
+      .includes(search.toLowerCase());
+  })
+  .sort((a, b) => {
+    const timeA = new Date(
+      a.latestMessage?.createdAt || a.updatedAt
+    ).getTime();
+
+    const timeB = new Date(
+      b.latestMessage?.createdAt || b.updatedAt
+    ).getTime();
+
+    return timeB - timeA;
+  });
   return (
     <aside
       className="
@@ -50,15 +76,15 @@ const ChatList = ({ selectedChat, setSelectedChat }) => {
     >
       {/* Header */}
 
-      <div className="border-b border-white/5 px-6 py-5">
+      <div className="border-b border-white/5 px-6 py-4 leading-13">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-3xl font-bold text-white">
               Chats
             </h2>
-
+            
             <p className="mt-1 text-sm text-slate-400">
-              {chats.length} Conversations
+              {filteredChats.length} Conversations
             </p>
           </div>
 
@@ -82,10 +108,10 @@ const ChatList = ({ selectedChat, setSelectedChat }) => {
             <FiEdit className="text-xl" />
           </button>
         </div>
-
+        
         {/* Search */}
 
-        <div className="relative mt-6">
+        <div className="relative mt-6 leading-16">
           <FiSearch
             className="
             absolute
@@ -97,10 +123,13 @@ const ChatList = ({ selectedChat, setSelectedChat }) => {
           />
 
           <input
-            type="text"
-            placeholder="Search conversations..."
+  type="text"
+  value={search}
+  onChange={(e) => setSearch(e.target.value)}
+  placeholder="  Search conversations..."
             className="
             w-full
+            h-[40px]
             rounded-2xl
             border
             border-white/10
@@ -120,16 +149,18 @@ const ChatList = ({ selectedChat, setSelectedChat }) => {
           />
         </div>
       </div>
-
+       
       {/* Chat List */}
-
+<br/>
       <div
         className="
         flex-1
-        space-y-2
+        space-y-20
+        leading-12
         overflow-y-auto
+
         px-3
-        py-4
+        py-8
       "
       >
         {loading ? (
@@ -141,6 +172,7 @@ const ChatList = ({ selectedChat, setSelectedChat }) => {
               animate-spin
               rounded-full
               border-4
+              
               border-cyan-500
               border-t-transparent
             "
@@ -158,13 +190,13 @@ const ChatList = ({ selectedChat, setSelectedChat }) => {
               No Conversations
             </h3>
 
-            <p className="mt-2 text-sm text-slate-400">
+            <p className="mt-4 text-sm text-slate-400">
               Start chatting with someone to see
               your conversations here.
             </p>
           </div>
         ) : (
-          chats.map((chat) => (
+          filteredChats.map((chat) => (
             <ChatItem
               key={chat._id}
               chat={chat}
@@ -175,7 +207,7 @@ const ChatList = ({ selectedChat, setSelectedChat }) => {
           ))
         )}
       </div>
-
+  
       {showGroupModal && (
         <CreateGroupModal
           onClose={() => setShowGroupModal(false)}

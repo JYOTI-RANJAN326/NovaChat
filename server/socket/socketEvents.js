@@ -1,3 +1,6 @@
+
+
+
 module.exports = (io, socket) => {
 
     // ==========================================
@@ -6,11 +9,11 @@ module.exports = (io, socket) => {
 
     socket.on("join-chat", (chatId) => {
 
+        if (!chatId) return;
+
         socket.join(chatId);
 
-        console.log(
-            `${socket.userId} joined chat ${chatId}`
-        );
+        console.log(`${socket.userId} joined chat ${chatId}`);
 
     });
 
@@ -20,11 +23,11 @@ module.exports = (io, socket) => {
 
     socket.on("leave-chat", (chatId) => {
 
+        if (!chatId) return;
+
         socket.leave(chatId);
 
-        console.log(
-            `${socket.userId} left chat ${chatId}`
-        );
+        console.log(`${socket.userId} left chat ${chatId}`);
 
     });
 
@@ -32,12 +35,14 @@ module.exports = (io, socket) => {
     // Typing
     // ==========================================
 
-    socket.on("typing", (chatId) => {
+    socket.on("typing", ({ chatId }) => {
 
-        socket.to(chatId).emit(
-            "typing",
-            socket.userId
-        );
+        if (!chatId) return;
+
+        socket.to(chatId).emit("typing", {
+            chatId,
+            userId: socket.userId,
+        });
 
     });
 
@@ -45,45 +50,47 @@ module.exports = (io, socket) => {
     // Stop Typing
     // ==========================================
 
-    socket.on("stop-typing", (chatId) => {
+    socket.on("stop-typing", ({ chatId }) => {
 
-        socket.to(chatId).emit(
-            "stop-typing",
-            socket.userId
-        );
+        if (!chatId) return;
+
+        socket.to(chatId).emit("stop-typing", {
+            chatId,
+            userId: socket.userId,
+        });
 
     });
 
     // ==========================================
-    // Delivered
+    // Message Delivered
     // ==========================================
 
     socket.on("delivered", ({ chatId, messageId }) => {
 
-        socket.to(chatId).emit(
-            "message-delivered",
-            {
-                chatId,
-                messageId,
-                userId: socket.userId,
-            }
-        );
+        if (!chatId || !messageId) return;
+
+        socket.to(chatId).emit("message-delivered", {
+            chatId,
+            messageId,
+            userId: socket.userId,
+        });
 
     });
 
     // ==========================================
-    // Seen
+    // Messages Seen
     // ==========================================
 
-    socket.on("seen", ({ chatId }) => {
+    socket.on("seen", ({ chatId, messageIds = [] }) => {
 
-        socket.to(chatId).emit(
-            "messages-seen",
-            {
-                chatId,
-                userId: socket.userId,
-            }
-        );
+        if (!chatId) return;
+
+        socket.to(chatId).emit("messages-seen", {
+            chatId,
+            messageIds,
+            userId: socket.userId,
+            seenAt: new Date(),
+        });
 
     });
 
@@ -93,6 +100,8 @@ module.exports = (io, socket) => {
 
     socket.on("new-notification", (notification) => {
 
+        if (!notification?.receiverId) return;
+
         io.to(notification.receiverId).emit(
             "new-notification",
             notification
@@ -101,12 +110,14 @@ module.exports = (io, socket) => {
     });
 
     // ==========================================
-    // Ping
+    // Ping / Pong (Heartbeat)
     // ==========================================
 
     socket.on("ping", () => {
 
-        socket.emit("pong");
+        socket.emit("pong", {
+            timestamp: Date.now(),
+        });
 
     });
 

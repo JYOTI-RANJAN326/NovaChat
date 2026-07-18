@@ -11,15 +11,17 @@ import MessageInput from "./MessageInput";
 import { socket } from "../../services/socket";
 
 const ChatWindow = ({ selectedChat }) => {
-  useEffect(() => {
-    if (!selectedChat?._id) return;
+useEffect(() => {
+  if (!selectedChat?._id) return;
 
-    socket.emit("join-chat", selectedChat._id);
+  const chatId = selectedChat._id;
 
-    return () => {
-      socket.emit("leave-chat", selectedChat._id);
-    };
-  }, [selectedChat]);
+  socket.emit("join-chat", chatId);
+
+  return () => {
+    socket.emit("leave-chat", chatId);
+  };
+}, [selectedChat?._id]);
 
   // Empty State
   if (!selectedChat) {
@@ -142,14 +144,25 @@ const ChatWindow = ({ selectedChat }) => {
 
       {/* Messages */}
 
-      <div className="relative z-10 flex-1 overflow-hidden">
-        <MessageList chat={selectedChat} />
-      </div>
+     <motion.div
+  key={selectedChat._id}
+  initial={{ opacity: 0 }}
+  animate={{ opacity: 1 }}
+  transition={{ duration: 0.2 }}
+  className="
+    relative
+    z-10
+    flex-1
+    overflow-hidden
+  "
+>
+<MessageList chat={selectedChat} />
+</motion.div>
 
       {/* Input */}
 
-      <div className="relative z-20">
-        <MessageInput chat={selectedChat} />
+      <div className="relative z-15">
+       <MessageInput chatId={selectedChat._id} />
       </div>
     </div>
   );

@@ -70,10 +70,10 @@ const MessageBubble = ({
 
   return (
     <div
-      className={`mb-5 flex ${
-        isMe ? "justify-end" : "justify-start"
-      }`}
-    >
+  className={`mb-4 flex px-5 ${
+    isMe ? "justify-end" : "justify-start"
+  }`}
+>
       <div
         className="relative"
         onContextMenu={(e) => {
@@ -83,23 +83,42 @@ const MessageBubble = ({
       >
         {/* Message Bubble */}
 
-        <div
-          className={`
-           max-w-fit
-          min-w-[120px]
-          max-w-[75%] lg:max-w-[65%] 
-            rounded-3xl
-            px-5
-            py-3
-            shadow-lg
+       <div
+  className={`
+    relative
+    min-w-[140px]
+    max-w-[78%]
+    lg:max-w-[68%]
+    rounded-[26px]
+    px-5
+    py-4
+    shadow-2xl
+    border
+    backdrop-blur-md
+    transition-all
+    duration-300
+    hover:scale-[1.01]
 
-            ${
-              isMe
-                ? "rounded-br-md bg-gradient-to-r from-cyan-500 to-blue-600 text-white"
-                : "rounded-bl-md bg-[#111C2F] text-slate-200"
-            }
-          `}
-        >
+    ${
+      isMe
+        ? `
+          rounded-br-lg
+          border-cyan-400/20
+          bg-gradient-to-br
+          from-cyan-500
+          via-sky-500
+          to-blue-600
+          text-white
+        `
+        : `
+          rounded-bl-lg
+          border-slate-700
+          bg-[#111827]/90
+          text-slate-200
+        `
+    }
+  `}
+>
         {/* Reply Preview */}
 
 {message.replyTo && (
@@ -145,11 +164,12 @@ const MessageBubble = ({
     {message.text && (
       <p
   className="
-    whitespace-pre-wrap
-    break-words
-    leading-7
-    text-[15px]
-  "
+  whitespace-pre-wrap
+  break-words
+  text-[15px]
+  leading-7
+  tracking-[0.2px]
+"
 >
   {message.text}
 </p>
@@ -162,11 +182,14 @@ const MessageBubble = ({
         src={message.attachment.url}
         alt="attachment"
         className="
-          mt-3
-          max-h-80
-          rounded-2xl
-          object-cover
-        "
+  mt-3
+  w-full
+  rounded-2xl
+  border
+  border-slate-700
+  object-cover
+  shadow-xl
+"
       />
     )}
 
@@ -252,7 +275,7 @@ const MessageBubble = ({
   </>
 
 )}
-         <div className="mt-2 flex items-center justify-end gap-2">
+         <div className="mt-3 flex items-center justify-end gap-2">
 
   {message.pinned && (
     <span className="text-cyan-400">
@@ -271,16 +294,21 @@ const MessageBubble = ({
   )}
 
   <p
-    className={`
-      text-xs
+   
+  className={`
+    ml-auto
+    text-[11px]
+    font-medium
+    tracking-wide
 
-      ${
-        isMe
-          ? "text-cyan-100"
-          : "text-slate-500"
-      }
-    `}
-  >
+    ${
+      isMe
+        ? "text-cyan-100/90"
+        : "text-slate-400"
+    }
+  `}
+>
+  
     {new Date(message.createdAt).toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
@@ -368,12 +396,14 @@ const MessageBubble = ({
   <ReactionPicker
     onSelect={async (emoji) => {
       try {
-        await toggleReaction(
-          message._id,
-          emoji
-        );
+       await toggleReaction(
+  message._id,
+  emoji
+);
 
-        setShowReaction(false);
+setShowReaction(false);
+
+await refreshMessages();
 
       } catch (error) {
         console.log(error);

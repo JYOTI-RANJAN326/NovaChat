@@ -10,19 +10,20 @@ const SidebarItem = ({
   return (
     <motion.button
       whileHover={{
-        x: 8,
-        scale: 1.02,
+        x: 6,
+        scale: 1.015,
       }}
       whileTap={{
         scale: 0.98,
       }}
       transition={{
         type: "spring",
-        stiffness: 300,
-        damping: 20,
+        stiffness: 320,
+        damping: 24,
       }}
       onClick={onClick}
       className={`
+        group
         relative
         flex
         items-center
@@ -37,28 +38,33 @@ const SidebarItem = ({
         ${
           active
             ? `
-              border-cyan-500/30
+              border-cyan-400/30
               bg-gradient-to-r
-              from-cyan-500/20
-              via-cyan-500/10
-              to-blue-500/20
-              shadow-[0_0_25px_rgba(34,211,238,0.18)]
+              from-cyan-500/15
+              via-sky-500/10
+              to-blue-500/15
+              shadow-[0_0_25px_rgba(34,211,238,.18)]
             `
             : `
               border-transparent
+              bg-transparent
               hover:border-white/10
               hover:bg-white/5
             `
         }
       `}
     >
+      {/* Hover Background */}
+
+      <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-cyan-500/5 via-transparent to-blue-500/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+
       {/* Left */}
 
-      <div className="flex items-center gap-4">
+      <div className="relative z-10 flex items-center gap-4">
         <motion.div
           animate={{
-            scale: active ? 1.1 : 1,
-            rotate: active ? 3 : 0,
+            scale: active ? 1.08 : 1,
+            rotate: active ? 5 : 0,
           }}
           transition={{ duration: 0.25 }}
           className={`
@@ -71,8 +77,20 @@ const SidebarItem = ({
             transition-all
             ${
               active
-                ? "bg-cyan-500/15 text-cyan-300"
-                : "bg-white/5 text-slate-400"
+                ? `
+                  bg-gradient-to-br
+                  from-cyan-400
+                  via-sky-500
+                  to-blue-600
+                  text-white
+                  shadow-[0_0_18px_rgba(34,211,238,.35)]
+                `
+                : `
+                  bg-white/5
+                  text-slate-400
+                  group-hover:bg-white/10
+                  group-hover:text-cyan-300
+                `
             }
           `}
         >
@@ -88,40 +106,47 @@ const SidebarItem = ({
               ${
                 active
                   ? "text-white"
-                  : "text-slate-300"
+                  : "text-slate-300 group-hover:text-white"
               }
             `}
           >
             {title}
           </span>
 
-          {active && (
-            <span className="text-xs text-cyan-300">
-              Active
-            </span>
-          )}
+          <span
+            className={`
+              text-xs
+              ${
+                active
+                  ? "text-cyan-300"
+                  : "text-slate-500 group-hover:text-slate-400"
+              }
+            `}
+          >
+            {active ? "Currently Active" : "Open Section"}
+          </span>
         </div>
       </div>
 
       {/* Right */}
 
-      <div className="flex items-center gap-3">
+      <div className="relative z-10 flex items-center gap-3">
         {badge > 0 && (
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             className="
               flex
+              min-w-[26px]
               h-6
-              min-w-[24px]
               items-center
               justify-center
               rounded-full
               bg-gradient-to-r
               from-cyan-500
-              to-blue-500
+              to-blue-600
               px-2
-              text-xs
+              text-[11px]
               font-bold
               text-white
               shadow-lg
@@ -139,7 +164,7 @@ const SidebarItem = ({
               w-2.5
               rounded-full
               bg-cyan-400
-              shadow-[0_0_12px_rgba(34,211,238,0.9)]
+              shadow-[0_0_14px_rgba(34,211,238,.9)]
             "
           />
         )}
@@ -149,11 +174,11 @@ const SidebarItem = ({
 
       {active && (
         <motion.div
-          layoutId="activeSidebar"
+          layoutId="sidebarActiveBar"
           transition={{
             type: "spring",
             stiffness: 300,
-            damping: 25,
+            damping: 24,
           }}
           className="
             absolute
@@ -162,25 +187,13 @@ const SidebarItem = ({
             h-10
             w-1
             rounded-r-full
-            bg-cyan-400
+            bg-gradient-to-b
+            from-cyan-300
+            to-blue-500
+            shadow-[0_0_12px_rgba(34,211,238,.8)]
           "
         />
       )}
-
-      {/* Hover Glow */}
-
-      <div
-        className="
-          pointer-events-none
-          absolute
-          inset-0
-          rounded-2xl
-          opacity-0
-          transition-opacity
-          duration-300
-          group-hover:opacity-100
-        "
-      />
     </motion.button>
   );
 };

@@ -14,6 +14,11 @@ import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 
 import { socket } from "./services/socket";
+import { getCurrentUserAPI } from "./services/authAPI";
+import {
+  setUser,
+  setLoading,
+} from "./slices/authSlice";
 import {
   getLocalStream,
   createCallerPeer,
@@ -21,7 +26,7 @@ import {
   signalPeer,
   destroyPeer,
 } from "./services/webrtc";
-
+import ProtectedRoute from "./components/common/ProtectedRoute";
 import { setOnlineUsers } from "./slices/socketSlice";
 import {
   setIncomingCall,
@@ -35,6 +40,28 @@ import IncomingCallModal from "./components/Call/IncomingCallModal";
 import CallScreen from "./components/Call/CallScreen";
 function App() {
   const dispatch = useDispatch();
+  useEffect(() => {
+  const loadUser = async () => {
+    dispatch(setLoading(true));
+
+    try {
+      const response = await getCurrentUserAPI();
+
+      dispatch(
+        setUser({
+          user: response.data,
+          token: null,
+        })
+      );
+    } catch (error) {
+      // Not logged in
+    } finally {
+      dispatch(setLoading(false));
+    }
+  };
+
+  loadUser();
+}, [dispatch]);
   const remoteAudioRef = useRef(null);
 
 const {
@@ -332,19 +359,31 @@ socket.on(
         />
 
         <Route
-          path="/chat"
-          element={<Chat />}
-        />
+  path="/chat"
+  element={
+    <ProtectedRoute>
+      <Chat />
+    </ProtectedRoute>
+  }
+/>
 
-        <Route
-          path="/profile"
-          element={<Profile />}
-        />
+<Route
+  path="/profile"
+  element={
+    <ProtectedRoute>
+      <Profile />
+    </ProtectedRoute>
+  }
+/>
 
-        <Route
-          path="/settings"
-          element={<Settings />}
-        />
+<Route
+  path="/settings"
+  element={
+    <ProtectedRoute>
+      <Settings />
+    </ProtectedRoute>
+  }
+/>
       </Routes>
     </>
   );

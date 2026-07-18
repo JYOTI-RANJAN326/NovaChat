@@ -1,5 +1,5 @@
 import axios from "axios";
-
+import { axiosInstance } from "./apiConnector";
 const BASE_URL = "http://localhost:5000/api/v1/messages";
 
 export const getMessages = async (chatId) => {
@@ -8,7 +8,7 @@ export const getMessages = async (chatId) => {
     {
       withCredentials: true,
     }
-  );
+  )
 
   return response.data;
 };
@@ -40,9 +40,9 @@ export const toggleReaction = async (
   messageId,
   emoji
 ) => {
-  const response = await apiConnector(
-    "PATCH",
-    `/api/messages/${messageId}/toggle-reaction`,
+  const response = await axiosInstance.patch(
+    
+    `/messages/${messageId}/toggle-reaction`,
     {
       emoji,
     }
@@ -57,48 +57,43 @@ export const editMessage = async (
   messageId,
   text
 ) => {
-  const response = await apiConnector(
-    "PATCH",
-    `/api/messages/${messageId}`,
-    {
-      text,
-    }
-  );
+  const response = await axiosInstance.patch(
+  `/messages/${messageId}`,
+  {
+    text,
+  }
+);
 
   return response.data;
 };
 
 export const deleteForMe = async (messageId) => {
-  const response = await apiConnector(
-    "PATCH",
-    `/api/messages/${messageId}/delete-for-me`
-  );
+  const response = await axiosInstance.patch(
+  `/messages/${messageId}/delete-for-me`
+);
 
   return response.data;
 };
 
 export const deleteForEveryone = async (messageId) => {
-  const response = await apiConnector(
-    "PATCH",
-    `/api/messages/${messageId}/delete-for-everyone`
-  );
+ const response = await axiosInstance.patch(
+  `/messages/${messageId}/delete-for-everyone`
+);
 
   return response.data;
 };
 
 export const toggleStarMessage = async (messageId) => {
-  const response = await apiConnector(
-    "PATCH",
-    `/api/messages/${messageId}/star`
-  );
+  const response = await axiosInstance.patch(
+  `/messages/${messageId}/star`
+);
 
   return response.data;
 };
 
 export const togglePinMessage = async (messageId) => {
-  const response = await apiConnector(
-    "PATCH",
-    `/api/messages/${messageId}/pin`
+  const response = await axiosInstance.patch(
+    `/messages/${messageId}/pin`
   );
 
   return response.data;

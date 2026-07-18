@@ -13,17 +13,18 @@ const useSocket = (userId) => {
 
   useEffect(() => {
     if (!userId) return;
+if (!socket.connected) {
+  socket.connect();
+} else {
+  socket.emit("setup", userId);
+}
 
-    if (!socket.connected) {
-      socket.connect();
-    }
+ socket.on("connect", () => {
+  console.log("🟢 Socket Connected:", socket.id);
 
-    socket.emit("setup", userId);
-
-    socket.on("connect", () => {
-      console.log("🟢 Socket Connected:", socket.id);
-    });
-
+  socket.emit("setup", userId);
+});
+socket.off("online-users");
    socket.on("online-users", (users) => {
     dispatch(setOnlineUsers(users));
 });
@@ -32,14 +33,18 @@ const useSocket = (userId) => {
       // dispatch(setOnlineUsers(users));
     //});
 // User started typing
+socket.off("typing");
+
 socket.on("typing", (userId) => {
   dispatch(addTypingUser(userId));
 });
 
 // User stopped typing
+socket.off("stop-typing");
 socket.on("stop-typing", (userId) => {
   dispatch(removeTypingUser(userId));
 });
+socket.off("new-notifications");
 socket.on("new-notification", (notification) => {
   dispatch(addNotification(notification));
 });

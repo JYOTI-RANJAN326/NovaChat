@@ -32,15 +32,17 @@ exports.createChat = async (req, res) => {
     }
 
     let chat = await Chat.findOne({
-      isGroupChat: false,
-      participants: {
-        $all: [req.user._id, receiverId],
-      },
-      deletedFor: {
-        $nin: [req.user._id],
-      },
-    }).populate("participants", "-password");
-
+  isGroupChat: false,
+  participants: {
+    $all: [req.user._id, receiverId],
+  },
+  $expr: {
+    $eq: [{ $size: "$participants" }, 2],
+  },
+  deletedFor: {
+    $nin: [req.user._id],
+  },
+}).populate("participants", "-password");
     if (chat) {
       return res.status(200).json({
         success: true,
@@ -206,6 +208,16 @@ exports.togglePinChat = async (req, res) => {
       });
 
     }
+    const isParticipant = chat.participants.some(
+  (member) => member.toString() === req.user._id.toString()
+);
+
+if (!isParticipant) {
+  return res.status(403).json({
+    success: false,
+    message: "Access denied",
+  });
+}
 
     const pinned = chat.pinnedBy.some(
       (id) => id.toString() === req.user._id.toString()
@@ -273,7 +285,16 @@ exports.toggleArchiveChat = async (req, res) => {
       });
 
     }
+    const isParticipant = chat.participants.some(
+  (member) => member.toString() === req.user._id.toString()
+);
 
+if (!isParticipant) {
+  return res.status(403).json({
+    success: false,
+    message: "Access denied",
+  });
+}
     const archived = chat.archivedBy.some(
       (id) => id.toString() === req.user._id.toString()
     );
@@ -340,6 +361,16 @@ exports.toggleMuteChat = async (req, res) => {
       });
 
     }
+    const isParticipant = chat.participants.some(
+  (member) => member.toString() === req.user._id.toString()
+);
+
+if (!isParticipant) {
+  return res.status(403).json({
+    success: false,
+    message: "Access denied",
+  });
+}
 
     const muted = chat.mutedBy.some(
       (id) => id.toString() === req.user._id.toString()
@@ -407,6 +438,16 @@ exports.deleteChat = async (req, res) => {
       });
 
     }
+    const isParticipant = chat.participants.some(
+  (member) => member.toString() === req.user._id.toString()
+);
+
+if (!isParticipant) {
+  return res.status(403).json({
+    success: false,
+    message: "Access denied",
+  });
+}
 
     if (
       !chat.deletedFor.some(
@@ -444,7 +485,11 @@ exports.deleteChat = async (req, res) => {
 
 exports.createGroupChat = async (req, res) => {
   try {
-    const { chatName, members } = req.body;
+   const {
+  chatName,
+  members,
+  groupImage = "",
+} = req.body;
 
     if (!chatName || !members) {
       return res.status(400).json({
@@ -468,12 +513,13 @@ exports.createGroupChat = async (req, res) => {
     ];
 
     const group = await Chat.create({
-      chatName,
-      isGroupChat: true,
-      participants,
-      admins: [req.user._id],
-      lastActivity: new Date(),
-    });
+    chatName,
+    isGroupChat: true,
+    groupImage,
+    participants,
+    admins: [req.user._id],
+    lastActivity: new Date(),
+});
 
     const populatedGroup = await Chat.findById(group._id)
       .populate("participants", "-password")
@@ -539,7 +585,7 @@ exports.addMember = async (req, res) => {
       });
     }
 
-    chat.participants.push(userId);
+   chat.participants.addToSet(userId);
 
     await chat.save();
 
@@ -597,6 +643,16 @@ exports.removeMember = async (req, res) => {
       });
     }
 
+    if (
+  chat.admins.length === 1 &&
+  chat.admins[0].toString() === userId
+) {
+  return res.status(400).json({
+    success: false,
+    message: "Cannot remove the last admin. Assign another admin first.",
+  });
+}
+
     chat.participants = chat.participants.filter(
       (member) => member.toString() !== userId
     );
@@ -641,6 +697,17 @@ exports.leaveGroup = async (req, res) => {
         message: "Group not found",
       });
     }
+
+    const isLastAdmin =
+  chat.admins.length === 1 &&
+  chat.admins[0].toString() === req.user._id.toString();
+
+if (isLastAdmin) {
+  return res.status(400).json({
+    success: false,
+    message: "Assign another admin before leaving the group.",
+  });
+}
 
     chat.participants = chat.participants.filter(
       (member) =>
@@ -696,7 +763,14 @@ exports.renameGroup = async (req, res) => {
       });
     }
 
-    chat.chatName = chatName;
+    if (!chatName || !chatName.trim()) {
+  return res.status(400).json({
+    success: false,
+    message: "Group name is required",
+  });
+}
+
+    chat.chatName = chatName.trim();
 
     await chat.save();
 

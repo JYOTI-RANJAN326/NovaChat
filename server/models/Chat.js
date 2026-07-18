@@ -21,22 +21,35 @@ const chatSchema = new mongoose.Schema(
       default: "",
     },
 
+    // Group Description
+    description: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
     // Members
-    participants: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        required: true,
-      },
-    ],
+    participants: {
+  type: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+  ],
+  default: [],
+},
 
     // Group Admins
-    admins: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
+    admins: {
+  type: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+  ],
+  default: [],
+},
 
     // Latest Message
     lastMessage: {
@@ -45,49 +58,94 @@ const chatSchema = new mongoose.Schema(
       default: null,
     },
 
-    // -----------------------------
-    // NEW FIELDS
-    // -----------------------------
-
     // Used for sorting chats
     lastActivity: {
       type: Date,
       default: Date.now,
     },
 
+    // -----------------------------
+    // User Specific Features
+    // -----------------------------
+
+    // User specific unread counts
+    unreadCounts: {
+      type: Map,
+      of: Number,
+      default: {},
+    },
+
     // User specific pinned chats
-    pinnedBy: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
+    pinnedBy: {
+  type: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+  ],
+  default: [],
+},
 
     // User specific archived chats
-    archivedBy: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
+    archivedBy: {
+  type: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+  ],
+  default: [],
+},
 
     // User specific muted chats
-    mutedBy: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
+    mutedBy: {
+  type: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+  ],
+  default: [],
+},
 
     // User specific deleted chats
-    deletedFor: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
+    deletedFor: {
+  type: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+  ],
+  default: [],
+},
 
-    // Soft delete flag (future use)
+    // -----------------------------
+    // Group Settings
+    // -----------------------------
+
+    inviteCode: {
+      type: String,
+      default: null,
+    },
+
+    groupSettings: {
+      onlyAdminsCanMessage: {
+        type: Boolean,
+        default: false,
+      },
+
+      onlyAdminsCanEdit: {
+        type: Boolean,
+        default: false,
+      },
+
+      allowMemberInvite: {
+        type: Boolean,
+        default: true,
+      },
+    },
+
+    // Soft Delete
     isDeleted: {
       type: Boolean,
       default: false,
@@ -106,10 +164,72 @@ chatSchema.index({ participants: 1 });
 
 chatSchema.index({ lastActivity: -1 });
 
+chatSchema.index({ participants: 1, lastActivity: -1 });
+
 chatSchema.index({ pinnedBy: 1 });
 
 chatSchema.index({ archivedBy: 1 });
 
 chatSchema.index({ mutedBy: 1 });
+chatSchema.index({
+  isGroupChat: 1,
+  lastActivity: -1,
+});
+chatSchema.index({
+  chatName: "text",
+});
+
+// -----------------------------
+// Virtuals
+// -----------------------------
+
+chatSchema.virtual("memberCount").get(function () {
+  return this.participants?.length || 0;
+});
+
+chatSchema.set("toJSON", { virtuals: true });
+chatSchema.set("toObject", { virtuals: true });
+
+// =======================================
+// Validation
+// =======================================
+
+chatSchema.pre("validate", function () {
+
+ if (!Array.isArray(this.participants) || this.participants.length < 2) {
+  return next(
+    new Error("A chat must have at least two participants.")
+  );
+}
+
+  
+
+});
+chatSchema.pre("save", function () {
+
+  // Group name validation
+  if (
+    this.isGroupChat &&
+    !this.chatName.trim()
+  ) {
+    return next(
+      new Error("Group name is required.")
+    );
+  }
+
+  // Duplicate participant validation
+  const uniqueParticipants = new Set(
+    this.participants.map(id => id.toString())
+  );
+
+  if (uniqueParticipants.size !== this.participants.length) {
+    return next(
+      new Error("Duplicate participants are not allowed.")
+    );
+  }
+
+  
+
+});
 
 module.exports = mongoose.model("Chat", chatSchema);

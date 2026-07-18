@@ -14,51 +14,54 @@ const InputField = ({
   return (
     <div className="space-y-3">
       {/* Label */}
-
       <label
         htmlFor={name}
-        className="text-sm font-semibold tracking-wide text-slate-300"
+        className="block text-sm font-medium tracking-wide text-slate-300"
       >
         {label}
       </label>
 
-      {/* Input Container */}
-
+      {/* Input */}
       <motion.div
         whileTap={{ scale: 0.995 }}
         className="
           group
+          relative
           flex
+          h-[54px]
           items-center
-          gap-4
-          h-[60px]
+          overflow-hidden
           rounded-2xl
           border
-          border-slate-700
-          bg-[#0B1220]
-          px-5
+          border-white/10
+          bg-white/[0.04]
+          backdrop-blur-xl
           transition-all
           duration-300
-          hover:border-cyan-500/40
+          hover:border-cyan-400/30
           focus-within:border-cyan-400
-          focus-within:ring-4
-          focus-within:ring-cyan-500/10
+          focus-within:shadow-[0_0_25px_rgba(34,211,238,0.18)]
         "
       >
-        {/* Left Icon */}
+        {/* Left Glow */}
+        <div className="absolute left-0 top-0 h-full w-[3px] bg-transparent transition-all duration-300 group-focus-within:bg-cyan-400" />
 
+        {/* Left Icon */}
         <div
           className="
+            ml-5
             flex
-            h-10
-            w-10
+            h-11
+            w-11
             items-center
             justify-center
             rounded-xl
-            text-xl
+            bg-white/[0.04]
+            text-lg
             text-slate-500
             transition-all
             duration-300
+            group-focus-within:bg-cyan-500/10
             group-focus-within:text-cyan-400
           "
         >
@@ -66,7 +69,6 @@ const InputField = ({
         </div>
 
         {/* Input */}
-
         <input
           id={name}
           name={name}
@@ -79,32 +81,34 @@ const InputField = ({
             h-full
             flex-1
             bg-transparent
+            px-4
             text-[15px]
             font-medium
+            tracking-wide
             text-white
             placeholder:text-slate-500
-            placeholder:font-normal
             focus:outline-none
           "
         />
 
         {/* Right Icon */}
-
         {rightIcon && (
           <button
             type="button"
             onClick={onRightIconClick}
             className="
+              mr-4
               flex
-              h-10
-              w-10
+              h-11
+              w-11
               items-center
               justify-center
               rounded-xl
-              text-xl
+              text-lg
               text-slate-500
               transition-all
               duration-300
+              hover:bg-cyan-500/10
               hover:text-cyan-400
             "
           >

@@ -59,8 +59,22 @@ const Chat = () => {
 
         {/* Chat Window */}
 
-       <div className="flex flex-1 flex-col overflow-hidden bg-[#0B1120]/40">
-  <ChatWindow selectedChat={selectedChat} />
+      <div className="flex flex-1 flex-col overflow-hidden bg-[#0B1120]/40">
+  {selectedChat ? (
+    <ChatWindow selectedChat={selectedChat} />
+  ) : (
+    <div className="flex flex-1 items-center justify-center">
+      <div className="text-center">
+        <h2 className="text-3xl font-bold text-white">
+          Welcome to NovaChat 👋
+        </h2>
+
+        <p className="mt-3 text-slate-400">
+          Select a conversation to start chatting.
+        </p>
+      </div>
+    </div>
+  )}
 </div>
       </div>
     </div>

@@ -58,17 +58,61 @@ const ChatItem = ({
     }
   }
 
-  const time = chat.lastActivity
-    ? new Date(chat.lastActivity).toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    : "";
+  const preview =
+  lastMessage.length > 45
+    ? `${lastMessage.slice(0, 45)}...`
+    : lastMessage;
+
+  const formatTime = (date) => {
+  if (!date) return "";
+
+  const messageDate = new Date(date);
+  const now = new Date();
+
+  const isToday =
+    messageDate.toDateString() === now.toDateString();
+
+  if (isToday) {
+    return messageDate.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  const yesterday = new Date();
+  yesterday.setDate(now.getDate() - 1);
+
+  if (
+    messageDate.toDateString() ===
+    yesterday.toDateString()
+  ) {
+    return "Yesterday";
+  }
+
+  const diff =
+    (now - messageDate) / (1000 * 60 * 60 * 24);
+
+  if (diff < 7) {
+    return messageDate.toLocaleDateString([], {
+      weekday: "short",
+    });
+  }
+
+  return messageDate.toLocaleDateString([], {
+    day: "numeric",
+    month: "short",
+  });
+};
+
+const time = formatTime(
+  chat.lastMessage?.createdAt || chat.lastActivity
+);
 
   const isPinned = chat.pinnedBy?.some(
     (id) => id.toString() === currentUserId
   );
-
+   const unreadCount =
+  chat.unreadCounts?.[currentUserId] || 0;
   return (
     <motion.div
       whileHover={{
@@ -227,18 +271,40 @@ const ChatItem = ({
             )}
 
             <p className="truncate text-sm text-slate-400">
-              {lastMessage}
-            </p>
+  {preview}
+</p>
 
           </div>
 
         </div>
 
-        {isPinned && (
-          <span className="text-base opacity-80">
-            📌
-          </span>
-        )}
+        <div className="ml-2 flex flex-col items-center gap-2">
+  {isPinned && (
+    <span className="text-base opacity-80">
+      📌
+    </span>
+  )}
+
+  {unreadCount > 0 && (
+    <div
+      className="
+        flex
+        min-h-5
+        min-w-5
+        items-center
+        justify-center
+        rounded-full
+        bg-cyan-500
+        px-1.5
+        text-[11px]
+        font-semibold
+        text-white
+      "
+    >
+      {unreadCount > 99 ? "99+" : unreadCount}
+    </div>
+  )}
+</div>
 
       </div>
     </motion.div>

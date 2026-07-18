@@ -3,38 +3,56 @@ import { useEffect, useRef, useState } from "react";
 import MessageBubble from "./MessageBubble";
 import { getMessages } from "../../services/messageAPI";
 import { socket } from "../../services/socket";
+//import { apiConnector } from "../../services/apiConnector";
 
 const MessageList = ({ chat }) => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [typing, setTyping] = useState(false);
-
+ const [typing, setTyping] = useState(false);
   const bottomRef = useRef(null);
 
   // ===========================
   // Fetch Messages
   // ===========================
 
+
   useEffect(() => {
-    if (!chat?._id) return;
+  if (!chat?._id) return;
 
-    fetchMessages();
-  }, [chat]);
+  setMessages([]);
+  fetchMessages();
+}, [chat?._id]);
 
-  const fetchMessages = async () => {
-    try {
-      setLoading(true);
+useEffect(() => {
+  if (!chat?._id) return;
 
-      const response = await getMessages(chat._id);
+  socket.emit("join-chat", chat._id);
 
-      // Backend returns data
-      setMessages(response.data || []);
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setLoading(false);
-    }
+  return () => {
+    socket.emit("leave-chat", chat._id);
   };
+}, [chat?._id]);
+
+
+ const fetchMessages = async () => {
+  try {
+    console.log("Chat:", chat);
+
+    setLoading(true);
+
+    const response = await getMessages(chat._id);
+
+    console.log("Response:", response);
+
+    setMessages(response.data || []);
+  } catch (error) {
+    console.log("ERROR:", error);
+    console.log("Response:", error.response);
+  } finally {
+    console.log("Finished");
+    setLoading(false);
+  }
+};
 
   // ===========================
   // Auto Scroll
@@ -46,54 +64,55 @@ const MessageList = ({ chat }) => {
     });
   }, [messages, typing]);
 
-  // ===========================
-  // Socket Listeners
-  // ===========================
-
-//   useEffect(() => {
-//     if (!chat?._id) return;
-// const handleReceiveMessage = (newMessage) => {
-//   if (newMessage.chat !== chat._id) return;
-
-//   setMessages((prev) => [...prev, newMessage]);
-// };
-//     const handleTyping = () => {
-//       setTyping(true);
-//     };
-
-//     const handleStopTyping = () => {
-//       setTyping(false);
-//     };
-
-//     socket.on("receive-message", handleReceiveMessage);
-
-//     socket.on("typing", handleTyping);
-
-//     socket.on("stop-typing", handleStopTyping);
-
-//     return () => {
-//       socket.off("receive-message", handleReceiveMessage);
-//       socket.off("typing", handleTyping);
-//       socket.off("stop-typing", handleStopTyping);
-//     };
-//   }, [chat]);
-
-useEffect(() => {
+ useEffect(() => {
   if (!chat?._id) return;
 
   const handleReceiveMessage = (msg) => {
-    console.log("🔥 RECEIVE EVENT");
-    console.log(msg);
+    const messageChatId =
+  typeof msg.chat === "object" ? msg.chat._id : msg.chat;
 
-    setMessages((prev) => [...prev, msg]);
+if (messageChatId !== chat._id) return;
+
+    setMessages((prev) => {
+      const exists = prev.some((m) => m._id === msg._id);
+
+      if (exists) return prev;
+
+      return [...prev, msg];
+    });
   };
+  const handleEditedMessage = (updatedMessage) => {
+  setMessages((prev) =>
+    prev.map((msg) =>
+      msg._id === updatedMessage._id ? updatedMessage : msg
+    )
+  );
+};
+
+ const handleTyping = ({ chatId }) => {
+  if (chatId !== chat._id) return;
+
+  setTyping(true);
+};
+
+ const handleStopTyping = ({ chatId }) => {
+  if (chatId !== chat._id) return;
+
+  setTyping(false);
+};
 
   socket.on("receive-message", handleReceiveMessage);
+socket.on("message-edited", handleEditedMessage);
+socket.on("typing", handleTyping);
+socket.on("stop-typing", handleStopTyping);
 
   return () => {
     socket.off("receive-message", handleReceiveMessage);
+     socket.off("message-edited", handleEditedMessage);
+    socket.off("typing", handleTyping);
+    socket.off("stop-typing", handleStopTyping);
   };
-}, [chat]);
+}, [chat?._id]);
 
 
   // ===========================

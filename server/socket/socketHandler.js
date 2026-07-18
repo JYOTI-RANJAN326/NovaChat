@@ -1,16 +1,35 @@
+
+
+
+
 const socketEvents = require("./socketEvents");
 
 module.exports = (io, socket, onlineUsers) => {
 
     console.log("Connected:", socket.id);
 
-    // ===============================
+    // ==================================
     // User Setup
-    // ===============================
+    // ==================================
 
     socket.on("setup", (userId) => {
 
         socket.userId = userId;
+
+        // Disconnect previous socket if user logs in again
+        const previousSocketId = onlineUsers.get(userId);
+
+        if (
+            previousSocketId &&
+            previousSocketId !== socket.id
+        ) {
+            const previousSocket =
+                io.sockets.sockets.get(previousSocketId);
+
+            if (previousSocket) {
+                previousSocket.disconnect(true);
+            }
+        }
 
         onlineUsers.set(userId, socket.id);
 
@@ -25,104 +44,121 @@ module.exports = (io, socket, onlineUsers) => {
 
     });
 
-    // Register all chat events
+    
+    // ==================================
+    // Register Chat Events
+    // ==================================
+
     socketEvents(io, socket);
-    // ===============================
-// Voice Call
-// ===============================
 
-socket.on("call-user", (data) => {
+    // ==================================
+    // Voice Call
+    // ==================================
 
-  const receiverSocketId =
-    onlineUsers.get(data.receiverId);
+    socket.on("call-user", (data) => {
 
-  if (!receiverSocketId) return;
+        const receiverSocketId =
+            onlineUsers.get(data.receiverId);
 
-  io.to(receiverSocketId).emit(
-    "incoming-call",
-    {
-      callerId: data.callerId,
-      callerName: data.callerName,
-    }
-  );
+        if (!receiverSocketId) return;
 
-});
+        io.to(receiverSocketId).emit(
+            "incoming-call",
+            {
+                callerId: data.callerId,
+                callerName: data.callerName,
+            }
+        );
 
- socket.on("webrtc-signal", (data) => {
+    });
 
-  const receiverSocketId =
-    onlineUsers.get(data.receiverId);
+    // ==================================
+    // WebRTC Signalling
+    // ==================================
 
-  if (!receiverSocketId) return;
+    socket.on("webrtc-signal", (data) => {
 
-  io.to(receiverSocketId).emit(
-    "webrtc-signal",
-    {
-      signal: data.signal,
-      senderId: socket.userId,
-    }
-  );
+        const receiverSocketId =
+            onlineUsers.get(data.receiverId);
 
-});
-socket.on("accept-call", (data) => {
+        if (!receiverSocketId) return;
 
-  const callerSocketId =
-    onlineUsers.get(data.callerId);
+        io.to(receiverSocketId).emit(
+            "webrtc-signal",
+            {
+                signal: data.signal,
+                senderId: socket.userId,
+            }
+        );
 
-  if (!callerSocketId) return;
+    });
 
-  io.to(callerSocketId).emit(
-    "call-accepted",
-    {
-      receiverId: data.receiverId,
-    }
-  );
+    socket.on("accept-call", (data) => {
 
-});
+        const callerSocketId =
+            onlineUsers.get(data.callerId);
 
-socket.on("reject-call", (data) => {
+        if (!callerSocketId) return;
 
-  const callerSocketId =
-    onlineUsers.get(data.callerId);
+        io.to(callerSocketId).emit(
+            "call-accepted",
+            {
+                receiverId: data.receiverId,
+            }
+        );
 
-  if (!callerSocketId) return;
+    });
 
-  io.to(callerSocketId).emit(
-    "call-rejected"
-  );
+    socket.on("reject-call", (data) => {
 
-});  
+        const callerSocketId =
+            onlineUsers.get(data.callerId);
 
-socket.on("end-call", (data) => {
+        if (!callerSocketId) return;
 
-  const receiverSocketId =
-    onlineUsers.get(data.receiverId);
+        io.to(callerSocketId).emit(
+            "call-rejected"
+        );
 
-  if (!receiverSocketId) return;
+    });
 
-  io.to(receiverSocketId).emit(
-    "call-ended"
-  );
+    socket.on("end-call", (data) => {
 
-});
+        const receiverSocketId =
+            onlineUsers.get(data.receiverId);
 
-    // ===============================
+        if (!receiverSocketId) return;
+
+        io.to(receiverSocketId).emit(
+            "call-ended"
+        );
+
+    });
+
+    // ==================================
     // Disconnect
-    // ===============================
+    // ==================================
 
     socket.on("disconnect", () => {
 
         if (socket.userId) {
 
-            onlineUsers.delete(socket.userId);
+            // Remove only if this socket is the active socket
+            if (
+                onlineUsers.get(socket.userId) === socket.id
+            ) {
+                onlineUsers.delete(socket.userId);
+            }
 
             io.emit(
                 "online-users",
                 [...onlineUsers.keys()]
             );
 
-            console.log("User Offline:", socket.userId);
-
+            console.log(
+                "User Offline:",
+                socket.userId
+            );
         }
 
         console.log("Disconnected:", socket.id);

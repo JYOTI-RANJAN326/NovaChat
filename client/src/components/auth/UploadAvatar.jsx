@@ -24,8 +24,8 @@ const UploadAvatar = ({ image, setImage }) => {
         onClick={() => inputRef.current.click()}
         className="
           relative
-          h-28
-          w-28
+          h-12
+          w-12
           cursor-pointer
           overflow-hidden
           rounded-full
