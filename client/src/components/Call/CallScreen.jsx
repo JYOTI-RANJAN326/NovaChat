@@ -17,6 +17,8 @@ import {
 const CallScreen = ({
   remoteUser,
   remoteAudioRef,
+  remoteVideoRef,
+  localVideoRef,
   onEnd,
   callType = "audio",
 }) => {
@@ -62,38 +64,84 @@ const CallScreen = ({
 
   return (
     <div
-      className="
-        fixed
-        inset-0
-        z-[999]
-        flex
-        items-center
-        justify-center
-        bg-[#08111F]
-      "
-    >
-      <audio
-        ref={remoteAudioRef}
-        autoPlay
-      />
+  className="
+    fixed
+    inset-0
+    z-[999]
+    bg-black
+    overflow-hidden
+  "
+>
+  {/* Audio */}
+  <audio
+    ref={remoteAudioRef}
+    autoPlay
+  />
 
+  {/* Remote Video */}
+  {isVideoCall && (
+    <video
+      ref={remoteVideoRef}
+      autoPlay
+      playsInline
+      className="
+        absolute
+        inset-0
+        h-full
+        w-full
+        object-cover
+        bg-black
+      "
+    />
+  )}
+
+  {/* Local Preview */}
+  {isVideoCall && (
+    <video
+      ref={localVideoRef}
+      autoPlay
+      muted
+      playsInline
+      className="
+        absolute
+        bottom-6
+        right-6
+        h-52
+        w-40
+        rounded-2xl
+        border-2
+        border-cyan-400
+        object-cover
+        bg-black
+        shadow-2xl
+        z-20
+      "
+    />
+  )}
+
+  
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="
-          w-[430px]
-          rounded-3xl
-          border
-          border-cyan-500/20
-          bg-[#111C2F]
-          p-8
-          text-center
-          shadow-[0_0_40px_rgba(34,211,238,.15)]
-        "
+        className={`
+  ${
+    isVideoCall
+      ? "absolute bottom-0 left-0 right-0 rounded-t-3xl"
+      : "w-[430px] rounded-3xl"
+  }
+  border
+  border-cyan-500/20
+  bg-[#111C2F]/70
+  backdrop-blur-xl
+  p-8
+  text-center
+  shadow-[0_0_40px_rgba(34,211,238,.15)]
+`}
       >
         {/* Avatar */}
 
-        <motion.div
+      {!isVideoCall && (
+<motion.div
           animate={{
             scale: [1, 1.05, 1],
           }}
@@ -121,8 +169,10 @@ const CallScreen = ({
         >
           {userName.charAt(0).toUpperCase()}
         </motion.div>
+      )}
 
-        <h2 className="mt-7 text-3xl font-bold text-white">
+      {/* Name margin */}
+       <h2 className={`${isVideoCall ? "mt-2" : "mt-7"} text-3xl font-bold text-white`}>
           {userName}
         </h2>
 
@@ -133,6 +183,7 @@ const CallScreen = ({
         <p className="mt-1 text-slate-400">
           {formatTime(duration)}
         </p>
+
 
         {/* Controls */}
 

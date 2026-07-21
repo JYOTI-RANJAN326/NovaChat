@@ -67,7 +67,7 @@ const ChatHeader = ({ chat, refreshChat }) => {
   return `Last seen ${date.toLocaleDateString()} ${time}`;
 };
 
-  const handleCall = () => {
+  const handleCall = (callType = "audio") => {
     if (!chat) return;
 
     if (chat.isGroupChat) {
@@ -81,18 +81,20 @@ const ChatHeader = ({ chat, refreshChat }) => {
       return;
     }
 
-    socket.emit("call-user", {
-      callerId: user._id,
-      callerName: user.fullName,
-      receiverId: otherUser._id,
-    });
+   socket.emit("call-user", {
+  callerId: user._id,
+  callerName: user.fullName,
+  receiverId: otherUser._id,
+  callType,
+});
 
-    dispatch(
-      setOutgoingCall({
-        receiverId: otherUser._id,
-        receiverName: otherUser.fullName,
-      })
-    );
+   dispatch(
+  setOutgoingCall({
+    receiverId: otherUser._id,
+    receiverName: otherUser.fullName,
+    callType,
+  })
+);
   };
 
   return (
@@ -266,7 +268,7 @@ const ChatHeader = ({ chat, refreshChat }) => {
         <motion.button
           whileHover={{ scale: 1.08 }}
           whileTap={{ scale: 0.95 }}
-          onClick={handleCall}
+          onClick={() => handleCall("audio")}
           disabled={chat.isGroupChat || !otherUser}
           className="
             flex
@@ -294,6 +296,8 @@ const ChatHeader = ({ chat, refreshChat }) => {
         <motion.button
           whileHover={{ scale: 1.08 }}
           whileTap={{ scale: 0.95 }}
+          onClick={() => handleCall("video")}
+           disabled={chat.isGroupChat || !otherUser}
           className="
             flex
             h-12

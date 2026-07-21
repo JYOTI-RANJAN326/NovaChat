@@ -107,21 +107,23 @@ if (
 
     },
 
-    onStream: (remoteStream) => {
-  const audio = remoteAudioRef.current;
+   onStream: (remoteStream) => {
 
-  if (!audio) return;
+  console.log("📹 Remote Stream:", remoteStream.id);
 
-  // Prevent attaching the same stream twice
-  if (audio.srcObject === remoteStream) return;
+  if (
+    outgoingCall?.callType === "video" &&
+    remoteVideoRef.current
+  ) {
+    remoteVideoRef.current.srcObject = remoteStream;
+    return;
+  }
 
-  console.log("🎵 Attaching Remote Stream:", remoteStream.id);
-
-  audio.srcObject = remoteStream;
-
-  audio.play().catch(console.error);
+  if (remoteAudioRef.current) {
+    remoteAudioRef.current.srcObject = remoteStream;
+    remoteAudioRef.current.play().catch(console.error);
+  }
 },
-
    onClose: () => {
   stopLocalMedia();
 
@@ -163,19 +165,22 @@ if (
 
     },
 
-    onStream: (remoteStream) => {
-  const audio = remoteAudioRef.current;
+   onStream: (remoteStream) => {
 
-  if (!audio) return;
+  console.log("📹 Remote Stream:", remoteStream.id);
 
-  // Prevent attaching the same stream twice
-  if (audio.srcObject === remoteStream) return;
+  if (
+    incomingCall?.callType === "video" &&
+    remoteVideoRef.current
+  ) {
+    remoteVideoRef.current.srcObject = remoteStream;
+    return;
+  }
 
-  console.log("🎵 Attaching Remote Stream:", remoteStream.id);
-
-  audio.srcObject = remoteStream;
-
-  audio.play().catch(console.error);
+  if (remoteAudioRef.current) {
+    remoteAudioRef.current.srcObject = remoteStream;
+    remoteAudioRef.current.play().catch(console.error);
+  }
 },
 
     onClose: () => {
@@ -376,12 +381,11 @@ useEffect(() => {
       {inCall && (
  <CallScreen
 remoteUser={remoteUser}
-    remoteAudioRef={remoteAudioRef}
-    remoteVideoRef={remoteVideoRef}
-    localVideoRef={localVideoRef}
-  callType={
-    remoteUser?.callType || "audio"
-  }
+    remoteUser={remoteUser}
+  remoteAudioRef={remoteAudioRef}
+  remoteVideoRef={remoteVideoRef}
+  localVideoRef={localVideoRef}
+  callType={remoteUser?.callType || "audio"}
  onEnd={() => {
 
   socket.emit("end-call", {
