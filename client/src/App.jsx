@@ -36,6 +36,7 @@ import {
   startCall,
   endCall,
 } from "./slices/callSlice";
+import GoogleSuccess from "./pages/GoogleSuccess";
 import IncomingCallModal from "./components/Call/IncomingCallModal";
 import CallScreen from "./components/Call/CallScreen";
 function App() {
@@ -357,6 +358,10 @@ socket.on(
           path="/signup"
           element={<Signup />}
         />
+        <Route
+  path="/google-success"
+  element={<GoogleSuccess />}
+/>
 
         <Route
   path="/chat"

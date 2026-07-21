@@ -1,9 +1,9 @@
 import { motion } from "framer-motion";
 import { FcGoogle } from "react-icons/fc";
-
 const SocialLogin = ({
   onGoogleLogin,
   loading = false,
+  text = "Continue with Google",
 }) => {
   return (
     <div className="space-y-6">
@@ -82,7 +82,7 @@ const SocialLogin = ({
         </div>
 
         <span className="relative z-10 text-[15px] font-semibold tracking-wide text-white transition group-hover:text-cyan-300">
-          Continue with Google
+         {text}
         </span>
       </motion.button>
     </div>

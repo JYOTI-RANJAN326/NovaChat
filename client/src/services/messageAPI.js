@@ -3,30 +3,44 @@ import { axiosInstance } from "./apiConnector";
 const BASE_URL = "http://localhost:5000/api/v1/messages";
 
 export const getMessages = async (chatId) => {
-  const response = await axios.get(
-    `${BASE_URL}/${chatId}`,
-    {
-      withCredentials: true,
-    }
-  )
+  try {
+    const response = await axiosInstance.get(
+      `/messages/${chatId}`
+    );
 
-  return response.data;
+    return response.data;
+  } catch (error) {
+    if (error.code === "ECONNABORTED") {
+      alert("Request timed out.");
+    } else {
+      console.error(error);
+    }
+
+    throw error;
+  }
 };
 
 export const sendMessage = async (data) => {
-  const response = await axios.post(
-    BASE_URL,
-    data,
-    {
-      withCredentials: true,
-    }
-  );
+  try {
+    const response = await axiosInstance.post(
+      "/messages",
+      data
+    );
 
-  return response.data;
+    return response.data;
+  } catch (error) {
+    if (error.code === "ECONNABORTED") {
+      alert("Request timed out. Please try again.");
+    } else {
+      console.error(error);
+    }
+
+    throw error; // Important: let the caller handle it too
+  }
 };
 
 export const markSeen = async (chatId) => {
-  const response = await axios.patch(
+  const response = await axiosInstance.patch(
     `${BASE_URL}/${chatId}/seen`,
     {},
     {

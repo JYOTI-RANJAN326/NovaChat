@@ -106,6 +106,13 @@ exports.login = async (req, res) => {
         message: "User does not exist.",
       });
     }
+    if (!user.password) {
+  return res.status(400).json({
+    success: false,
+    message:
+      "This account was created using Google. Please continue with Google.",
+  });
+}
 
     const isMatch = await bcrypt.compare(
       password,

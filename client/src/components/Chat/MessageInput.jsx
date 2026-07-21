@@ -26,6 +26,7 @@ import VoiceRecorder from "./VoiceRecorder";
 // import { uploadFile } from "../../services/uploadAPI"; // Enable after creating upload API
 
 const MessageInput = ({ chat }) => {
+  console.log("MessageInput chat:", chat);
   const [message, setMessage] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -106,10 +107,12 @@ const handleVoiceRecording = async (audioBlob) => {
         type: audioBlob.type,
       }
     );
-
+    
     // Upload to Cloudinary
     const uploadResponse = await uploadFile(audioFile);
-
+    if (!uploadResponse.success) {
+  throw new Error("Upload failed");
+}
     const attachment = {
       url: uploadResponse.data.url,
       fileName: uploadResponse.data.fileName,
@@ -119,21 +122,53 @@ const handleVoiceRecording = async (audioBlob) => {
       type: "audio",
     };
 
-    // Send as chat message
-   await sendMessage({
+//     const payload = {
+//   chatId: chat._id,
+//   text: message,
+//   attachments: attachment ? [attachment] : [],
+//   replyTo: replyMessage?._id,
+// };
+
+// console.log("Sending payload:", payload);
+
+// await sendMessage(payload);
+
+//     // Send as chat message
+//    await sendMessage({
+//   chatId: chat._id,
+//   text: message,
+//   attachments: attachment ? [attachment] : [],
+//   replyTo: replyMessage?._id,
+// });
+
+const textToSend = message;
+
+console.log("message state:", message);
+console.log("textToSend:", textToSend);
+
+const payload = {
   chatId: chat._id,
-  text: message,
+  text: textToSend,
   attachments: attachment ? [attachment] : [],
   replyTo: replyMessage?._id,
-});
+};
+
+console.log("Payload:", payload);
+
+await sendMessage(payload);
 
     dispatch(clearReply());
 
-  } catch (error) {
+
+
+
+   } catch (error) {
 
     console.log(error);
 
-  } finally {
+  
+  
+  }finally {
 
     setLoading(false);
 
@@ -143,8 +178,10 @@ const handleVoiceRecording = async (audioBlob) => {
   // ===============================
   // Send Message
   // ===============================
+  
 
   const handleSend = async () => {
+    
    if (!chat?._id) return;
 
 if (!message.trim() && !selectedFile) return;
@@ -152,12 +189,13 @@ if (!message.trim() && !selectedFile) return;
     try {
       setLoading(true);
 
-     let attachment = null;
+    let attachment = null;
+  
 
 if (selectedFile) {
   console.log("Uploading file...");
-const uploadResponse = await uploadFile(selectedFile);
-console.log("Upload Response:", uploadResponse);
+  const uploadResponse = await uploadFile(selectedFile);
+  console.log("Upload Response:", uploadResponse);
 
   attachment = {
     url: uploadResponse.data.url,
@@ -173,17 +211,7 @@ console.log("Upload Response:", uploadResponse);
       : "document",
   };
 }
-console.log("Attachment:", attachment);
-      
-    //   ==================================================
-    //   Upload file to Cloudinary (Enable Later)
-    //   ==================================================
-
-    //    if (selectedFile) {
-    //     const uploadResponse = await uploadFile(selectedFile);
-
-    //     attachment = uploadResponse.data;
-    // }
+    
     
 
      if (editMessage) {
@@ -203,9 +231,11 @@ console.log("Attachment:", attachment);
   attachments: attachment ? [attachment] : [],
   replyTo: replyMessage?._id,
 });
+}
 
   dispatch(clearReply());
-}
+
+
 
 clearTimeout(typingTimeoutRef.current);
 
@@ -217,12 +247,13 @@ setShowEmojiPicker(false);
 removeFile();
 
 textAreaRef.current?.focus();
-    } catch (error) {
+} catch (error) {
       console.log(error);
-    } finally {
+} finally {
       setLoading(false);
-    }
-  };
+}
+  
+};
   useEffect(() => {
   const handleClickOutside = (event) => {
     if (
@@ -276,8 +307,8 @@ useEffect(() => {
     shadow-[0_-10px_40px_rgba(0,0,0,0.35)]
   "
 >
-          <ReplyPreview />
-          <EditPreview />
+          {/* <ReplyPreview />
+          <EditPreview /> */}
       {/* {Selected File } */}
 
      {selectedFile && (
@@ -487,4 +518,4 @@ useEffect(() => {
   );
 };
 
-export default MessageInput;
+export default MessageInput; 

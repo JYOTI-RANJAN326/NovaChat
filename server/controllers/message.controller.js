@@ -5,6 +5,7 @@ const { getIO } = require("../socket/socket");
 
 
 exports.sendMessage = async (req, res) => {
+  console.log("BODY:", req.body);
   try {
     const {
     chatId,
@@ -23,7 +24,7 @@ exports.sendMessage = async (req, res) => {
     // At least one of text or attachment
     const hasText = text && text.trim().length > 0;
 
-    if (!hasText && !attachments.length === 0) {
+    if (!hasText && attachments.length === 0) {
       return res.status(400).json({
         success: false,
         message: "Message cannot be empty",

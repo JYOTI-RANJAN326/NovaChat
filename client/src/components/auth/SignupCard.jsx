@@ -47,7 +47,10 @@ const [image, setImage] = useState(null);
       [e.target.name]: e.target.value,
     }));
   };
-
+const handleGoogleSignup = () => {
+  window.location.href =
+    "http://localhost:5000/api/v1/auth/google";
+};
  const handleSubmit = async (e) => {
   e.preventDefault();
 
@@ -248,8 +251,10 @@ const [image, setImage] = useState(null);
 
           {/* Google */}
 
-          <SocialLogin />
-
+         <SocialLogin
+  text="Sign up with Google"
+  onGoogleLogin={handleGoogleSignup}
+/>
           {/* Footer */}
 
           <div className="pt-1 flex items-center justify-center gap-1.5 text-base text-slate-400">

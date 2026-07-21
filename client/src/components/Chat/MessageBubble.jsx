@@ -31,6 +31,7 @@ const MessageBubble = ({
   const menuRef = useRef(null);
 
   const isMe = message.sender?._id === user?._id;
+  const attachment = message.attachments?.[0];
 
   // ===========================
   // Copy Message
@@ -177,9 +178,9 @@ const MessageBubble = ({
 
     {/* Image */}
 
-    {message.attachment?.type === "image" && (
+    {attachment?.type === "image" && (
       <img
-        src={message.attachment.url}
+        src={attachment.url}
         alt="attachment"
         className="
   mt-3
@@ -195,7 +196,7 @@ const MessageBubble = ({
 
     {/* Video */}
 
-    {message.attachment?.type === "video" && (
+    {attachment?.type === "video" && (
       <video
         controls
         className="
@@ -205,28 +206,28 @@ const MessageBubble = ({
         "
       >
         <source
-          src={message.attachment.url}
+          src={attachment.url}
         />
       </video>
     )}
 
     {/* Voice */}
 
-   {message.attachment?.type === "audio" && (
+   {attachment?.type === "audio" && (
   <VoiceMessage
-    url={message.attachment.url}
+    url={attachment.url}
     duration={
-      message.attachment.duration
+      attachment.duration
     }
   />
 )}
 
     {/* Document */}
 
-    {message.attachment?.type ===
+    {attachment?.type ===
       "document" && (
       <a
-        href={message.attachment.url}
+        href={attachment.url}
         target="_blank"
         rel="noreferrer"
         className="
@@ -239,7 +240,7 @@ const MessageBubble = ({
           hover:text-cyan-200
         "
       >
-        📄 {message.attachment.fileName}
+        📄 {attachment.fileName}
       </a>
     )}
 

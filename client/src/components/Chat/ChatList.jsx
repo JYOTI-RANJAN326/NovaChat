@@ -64,7 +64,7 @@ const ChatList = ({ selectedChat, setSelectedChat }) => {
       className="
       flex
       h-screen
-      w-[360px]
+      w-[460px]
       flex-col
       border-r
       border-white/10
@@ -160,7 +160,7 @@ const ChatList = ({ selectedChat, setSelectedChat }) => {
         overflow-y-auto
 
         px-3
-        py-8
+        py-9
       "
       >
         {loading ? (

@@ -34,12 +34,21 @@ const userSchema = new mongoose.Schema(
       ],
     },
 
-    password: {
-      type: String,
-      required: true,
-      minlength: 6,
-      select: false,
-    },
+   password: {
+  type: String,
+  select: false,
+},
+
+googleId: {
+  type: String,
+  default: "",
+},
+
+authProvider: {
+  type: String,
+  enum: ["local", "google"],
+  default: "local",
+},
 
     profilePic: {
       type: String,
@@ -91,18 +100,19 @@ userSchema.index({
 // Validation
 // ===============================
 
-userSchema.pre("validate", function (next) {
+userSchema.pre("validate", async function () {
+  if (this.fullName) {
+    this.fullName = this.fullName.trim();
+  }
 
-  this.fullName = this.fullName.trim();
+  if (this.username) {
+    this.username = this.username.trim().toLowerCase();
+  }
 
-  this.username = this.username.trim().toLowerCase();
-
-  this.email = this.email.trim().toLowerCase();
-
-  next();
-
+  if (this.email) {
+    this.email = this.email.trim().toLowerCase();
+  }
 });
-
 userSchema.virtual("displayName").get(function () {
   return this.fullName || this.username;
 });

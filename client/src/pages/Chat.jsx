@@ -46,22 +46,32 @@ const Chat = () => {
         backdrop-blur-3xl
       "
       >
-        {/* Sidebar */}
+        {/* Left Panel (Sidebar + Chat List) */}
 
-        <Sidebar />
+<div
+  className={`
+    ${selectedChat ? "hidden lg:flex" : "flex"}
+    w-full
+    lg:w-[640px]
+    flex-shrink-0
+  `}
+>
+  <Sidebar />
 
-        {/* Chat List */}
-
-        <ChatList
-          selectedChat={selectedChat}
-          setSelectedChat={setSelectedChat}
-        />
+  <ChatList className="w-full lg:w-[640px] px-4 py-10"
+    selectedChat={selectedChat}
+    setSelectedChat={setSelectedChat}
+  />
+</div>
 
         {/* Chat Window */}
 
       <div className="flex flex-1 flex-col overflow-hidden bg-[#0B1120]/40">
   {selectedChat ? (
-    <ChatWindow selectedChat={selectedChat} />
+    <ChatWindow
+  selectedChat={selectedChat}
+  setSelectedChat={setSelectedChat}
+/>
   ) : (
     <div className="flex flex-1 items-center justify-center">
       <div className="text-center">

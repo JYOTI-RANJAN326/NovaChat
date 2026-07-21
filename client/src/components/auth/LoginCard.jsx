@@ -33,6 +33,9 @@ const LoginCard = () => {
   const dispatch = useDispatch();
 
 const [loading, setLoading] = useState(false);
+const handleGoogleLogin = () => {
+  window.location.href = "http://localhost:5000/api/v1/auth/google";
+};
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -219,7 +222,9 @@ disabled:opacity-60
           {/* Social Login */}
 
           <div className="pt-2">
-            <SocialLogin />
+           <SocialLogin
+  onGoogleLogin={handleGoogleLogin}
+/>
           </div>
 
           {/* Signup */}

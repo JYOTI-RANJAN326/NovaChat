@@ -3,6 +3,8 @@ const http = require("http"); // adding for sockets.io
  require("dotenv").config();
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const session = require("express-session");
+const passport = require("./config/passport");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/auth.routes");
 const userRoutes = require("./routes/user.routes");
@@ -27,6 +29,17 @@ app.use(
 );
 app.use(express.json());
 app.use(cookieParser());
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+
+app.use(passport.initialize());
+
+app.use(passport.session());
 app.use("/api/upload", uploadRoutes);
 
 app.use("/api/v1/auth", authRoutes);
