@@ -1,32 +1,38 @@
 const express = require("express");
-
 const router = express.Router();
 
 const { protect } = require("../middlewares/auth.middleware");
 
 const {
   createGroup,
+  getMyGroups,
+  getGroupDetails,
   renameGroup,
-  addMembers,
+  addMember,
   removeMember,
-  leaveGroup,
   makeAdmin,
-removeAdmin,
-deleteGroup,
+  removeAdmin,
+  leaveGroup,
+  deleteGroup,
 } = require("../controllers/group.controller");
 
-router.post("/", protect, createGroup);
+router.use(protect);
 
-router.patch("/:groupId/rename", protect, renameGroup);
+router.post("/", createGroup);
 
-router.patch("/:groupId/add-members", protect, addMembers);
+router.get("/", getMyGroups);
+router.get("/:chatId", getGroupDetails);
 
-router.patch("/:groupId/remove-member", protect, removeMember);
-router.patch("/:groupId/leave", protect, leaveGroup);
-router.patch("/:groupId/make-admin", protect, makeAdmin);
+router.put("/:chatId/rename", renameGroup);
 
-router.patch("/:groupId/remove-admin", protect, removeAdmin);
+router.put("/:chatId/add-member", addMember);
+router.put("/:chatId/remove-member", removeMember);
 
-router.delete("/:groupId", protect, deleteGroup);
+router.put("/:chatId/make-admin", makeAdmin);
+router.put("/:chatId/remove-admin", removeAdmin);
+
+router.put("/:chatId/leave", leaveGroup);
+
+router.delete("/:chatId", deleteGroup);
 
 module.exports = router;

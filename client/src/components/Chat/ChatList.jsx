@@ -8,7 +8,7 @@ import { useSelector } from "react-redux";
 
 import ChatItem from "./ChatItem";
 import { getMyChats } from "../../services/chatAPI";
-import CreateGroupModal from "./CreateGroupModal";
+//import CreateGroupModal from "./CreateGroupModal";
 
 const ChatList = ({ selectedChat, setSelectedChat }) => {
   const [chats, setChats] = useState([]);
@@ -209,11 +209,12 @@ const ChatList = ({ selectedChat, setSelectedChat }) => {
       </div>
   
       {showGroupModal && (
-        <CreateGroupModal
-          onClose={() => setShowGroupModal(false)}
-          onGroupCreated={fetchChats}
-        />
-      )}
+  <CreateGroupModal
+    open={showGroupModal}
+    onClose={() => setShowGroupModal(false)}
+    onGroupCreated={fetchChats}
+  />
+)}
     </aside>
   );
 };

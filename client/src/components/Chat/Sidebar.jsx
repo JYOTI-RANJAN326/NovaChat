@@ -9,6 +9,7 @@ import {
   FiLogOut,
   FiSearch,
 } from "react-icons/fi";
+import { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import Logo from "../common/Logo";
 import SidebarItem from "./SidebarItem";
@@ -50,9 +51,12 @@ const menuItems = [
 ];
 
 const Sidebar = () => {
+ 
+   const location = useLocation();
   const { user } = useSelector((state) => state.auth);
 const dispatch = useDispatch();
 const navigate = useNavigate();
+
 const handleLogout = async () => {
   try {
     await logoutAPI();
@@ -79,20 +83,21 @@ const routeMap = {
   Settings: "/settings",
 };
   return (
+    <>
   <motion.aside
     initial={{ x: -80, opacity: 0 }}
     animate={{ x: 0, opacity: 1 }}
     transition={{ duration: 0.55 }}
-    className="relative flex h-screen w-[300px] flex-col overflow-hidden border-r border-white/10 bg-[#08111F]"
+    className="relative flex h-screen w-[350px] flex-col overflow-hidden border-r border-white/10 bg-[#08111F]"
   >
     {/* Background */}
-    <div className="absolute inset-0 bg-[#08111F]" />
-    <div className="absolute -left-20 top-0 h-72 w-72 rounded-full bg-cyan-500/5 blur-[120px]" />
-   <br/>
+    <div className="absolute inset-0 bg-[#08111F] " />
+    <div className="absolute -left-20 top-0 h-72 w-72 rounded-full bg-cyan-500/5 blur-[120px] " />
+   
     <div className="relative z-10 flex h-full flex-col px-5 py-6">
       {/* Logo */}
       <Logo />
-      <br/>
+      
       {/* Search */}
       <div className="relative  mt-6">
         <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
@@ -118,8 +123,21 @@ const routeMap = {
         />
       </div>
        <br/>
+       <div className="mt-5 flex gap-3">
+
+  <button
+    onClick={() => navigate("/new-chat")}
+    className="flex-1 rounded-xl  h-[35px] bg-cyan-600 py-2 text-sm font-semibold text-white transition hover:bg-cyan-500"
+  >
+    + New Chat
+  </button>
+
+  
+
+</div>
+<br/>
       {/* Menu */}
-      <div className="mt-6 ">
+      <div className="mt-6 w-[276px]">
         <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
           MENU
         </p>
@@ -142,7 +160,7 @@ const routeMap = {
       
       <br/>
       {/* Push profile to bottom */}
-      <div className="mt-auto border-t border-white/10 pt-5">
+      <div className="mt-auto w-[400px] border-t border-white/10 pt-5">
         <div className="flex items-center gap-3">
           <div className="relative">
             <br/>
@@ -175,7 +193,8 @@ const routeMap = {
     logout-btn
     flex
     h-[40px]
-    w-[260px]
+    w-[269px]
+    
     items-center
     justify-center
     gap-3
@@ -193,9 +212,15 @@ const routeMap = {
           <FiLogOut />
           Logout
         </button>
+        
       </div>
+      
     </div>
+    
   </motion.aside>
+  
+</>
+   
 );
 
 

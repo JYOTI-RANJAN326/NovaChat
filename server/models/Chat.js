@@ -196,39 +196,43 @@ chatSchema.set("toObject", { virtuals: true });
 
 chatSchema.pre("validate", function () {
 
- if (!Array.isArray(this.participants) || this.participants.length < 2) {
-  return next(
-    new Error("A chat must have at least two participants.")
-  );
-}
-
-  
+    if (
+        !Array.isArray(this.participants) ||
+        this.participants.length < 2
+    ) {
+        throw new Error(
+            "A chat must have at least two participants."
+        );
+    }
 
 });
+  
+
+
+
 chatSchema.pre("save", function () {
 
-  // Group name validation
-  if (
-    this.isGroupChat &&
-    !this.chatName.trim()
-  ) {
-    return next(
-      new Error("Group name is required.")
+    if (
+        this.isGroupChat &&
+        !this.chatName.trim()
+    ) {
+        throw new Error(
+            "Group name is required."
+        );
+    }
+
+    const uniqueParticipants = new Set(
+        this.participants.map(id => id.toString())
     );
-  }
 
-  // Duplicate participant validation
-  const uniqueParticipants = new Set(
-    this.participants.map(id => id.toString())
-  );
-
-  if (uniqueParticipants.size !== this.participants.length) {
-    return next(
-      new Error("Duplicate participants are not allowed.")
-    );
-  }
-
-  
+    if (
+        uniqueParticipants.size !==
+        this.participants.length
+    ) {
+        throw new Error(
+            "Duplicate participants are not allowed."
+        );
+    }
 
 });
 
