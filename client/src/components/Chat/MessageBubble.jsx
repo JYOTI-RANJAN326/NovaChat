@@ -42,6 +42,23 @@ const MessageBubble = ({
     setShowMenu(false);
   };
 
+ const getStatus = () => {
+  if (!isMe) return null;
+
+  if (message.status === "failed") {
+    return "❌";
+  }
+
+  if (message.seenBy?.length > 1) {
+    return (
+      <span className="text-sky-300">
+        ✓✓
+      </span>
+    );
+  }
+
+  return "✓";
+};
   // ===========================
   // Close Menu Outside
   // ===========================
@@ -68,6 +85,8 @@ const MessageBubble = ({
       );
     };
   }, []);
+
+  
 
   return (
     <div
@@ -276,15 +295,13 @@ const MessageBubble = ({
   </>
 
 )}
-         <div className="mt-3 flex items-center justify-end gap-2">
+        <div className="mt-3 flex items-center justify-end gap-2">
 
   {message.pinned && (
     <span className="text-cyan-400">
       📌
     </span>
   )}
-
- </div>
 
   {message.starredBy?.some(
     (id) => id.toString() === user?._id
@@ -294,27 +311,22 @@ const MessageBubble = ({
     </span>
   )}
 
-  <p
-   
-  className={`
-    ml-auto
-    text-[11px]
-    font-medium
-    tracking-wide
+  <div
+    className={`ml-auto flex items-center gap-1 text-[11px]
+      ${isMe ? "text-cyan-100/90" : "text-slate-400"}
+    `}
+  >
+    <span>
+      {new Date(message.createdAt).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      })}
+    </span>
 
-    ${
-      isMe
-        ? "text-cyan-100/90"
-        : "text-slate-400"
-    }
-  `}
->
-  
-    {new Date(message.createdAt).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    })}
-  </p>
+    {getStatus()}
+  </div>
+
+</div>
 
 </div>
         </div>

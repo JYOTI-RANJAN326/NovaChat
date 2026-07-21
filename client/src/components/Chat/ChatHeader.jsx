@@ -37,6 +37,35 @@ const ChatHeader = ({ chat, refreshChat }) => {
     !chat.isGroupChat &&
     otherUser &&
     onlineUsers.includes(otherUser._id);
+    const formatLastSeen = (lastSeen) => {
+  if (!lastSeen) return "Offline";
+
+  const date = new Date(lastSeen);
+  const now = new Date();
+
+  const isToday = date.toDateString() === now.toDateString();
+
+  const yesterday = new Date();
+  yesterday.setDate(now.getDate() - 1);
+
+  const isYesterday =
+    date.toDateString() === yesterday.toDateString();
+
+  const time = date.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  if (isToday) {
+    return `Last seen today at ${time}`;
+  }
+
+  if (isYesterday) {
+    return `Last seen yesterday at ${time}`;
+  }
+
+  return `Last seen ${date.toLocaleDateString()} ${time}`;
+};
 
   const handleCall = () => {
     if (!chat) return;
@@ -212,15 +241,17 @@ const ChatHeader = ({ chat, refreshChat }) => {
                 `}
               />
 
-              <span
-                className={`text-sm font-medium ${
-                  isOnline
-                    ? "text-emerald-400"
-                    : "text-slate-400"
-                }`}
-              >
-                {isOnline ? "Online" : "Offline"}
-              </span>
+             <span
+  className={`text-sm font-medium ${
+    isOnline
+      ? "text-emerald-400"
+      : "text-slate-400"
+  }`}
+>
+ {isOnline
+  ? "🟢 Online"
+  : `🕒 ${formatLastSeen(otherUser?.lastSeen)}`}
+</span>
 
             </div>
           )}

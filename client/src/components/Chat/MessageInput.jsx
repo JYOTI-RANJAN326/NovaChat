@@ -307,8 +307,8 @@ useEffect(() => {
     shadow-[0_-10px_40px_rgba(0,0,0,0.35)]
   "
 >
-          {/* <ReplyPreview />
-          <EditPreview /> */}
+          <ReplyPreview />
+          <EditPreview />
       {/* {Selected File } */}
 
      {selectedFile && (

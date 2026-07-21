@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import MessageBubble from "./MessageBubble";
-import { getMessages } from "../../services/messageAPI";
+import { getMessages ,markSeen,} from "../../services/messageAPI";
 import { socket } from "../../services/socket";
 //import { apiConnector } from "../../services/apiConnector";
 
@@ -16,11 +16,18 @@ const MessageList = ({ chat }) => {
   // ===========================
 
 
-  useEffect(() => {
+ useEffect(() => {
   if (!chat?._id) return;
 
-  setMessages([]);
-  fetchMessages();
+  const loadChat = async () => {
+    setMessages([]);
+
+    await fetchMessages();
+
+    await markSeen(chat._id);
+  };
+
+  loadChat();
 }, [chat?._id]);
 
 useEffect(() => {
@@ -100,6 +107,27 @@ if (messageChatId !== chat._id) return;
 
   setTyping(false);
 };
+const handleMessagesSeen = ({ userId }) => {
+  setMessages((prev) =>
+    prev.map((msg) => {
+      if (
+        !msg.seenBy.some((id) => id === userId)
+      ) {
+        return {
+          ...msg,
+          seenBy: [...msg.seenBy, userId],
+        };
+      }
+
+      return msg;
+    })
+  );
+};
+
+socket.on("messages-seen", handleMessagesSeen);
+
+ 
+
 
   socket.on("receive-message", handleReceiveMessage);
 socket.on("message-edited", handleEditedMessage);
@@ -111,6 +139,7 @@ socket.on("stop-typing", handleStopTyping);
      socket.off("message-edited", handleEditedMessage);
     socket.off("typing", handleTyping);
     socket.off("stop-typing", handleStopTyping);
+     socket.off("messages-seen", handleMessagesSeen);
   };
 }, [chat?._id]);
 

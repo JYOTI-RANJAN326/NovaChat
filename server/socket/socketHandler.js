@@ -1,6 +1,6 @@
 
 
-
+const User = require("../models/User");
 
 const socketEvents = require("./socketEvents");
 
@@ -12,7 +12,7 @@ module.exports = (io, socket, onlineUsers) => {
     // User Setup
     // ==================================
 
-    socket.on("setup", (userId) => {
+    socket.on("setup", async (userId) => {
 
         socket.userId = userId;
 
@@ -31,16 +31,22 @@ module.exports = (io, socket, onlineUsers) => {
             }
         }
 
-        onlineUsers.set(userId, socket.id);
+       onlineUsers.set(userId, socket.id);
 
-        socket.join(userId);
+socket.join(userId);
 
-        io.emit(
-            "online-users",
-            [...onlineUsers.keys()]
-        );
+// Update DB
+await User.findByIdAndUpdate(userId, {
+    isOnline: true,
+});
 
-        console.log("User Online:", userId);
+io.emit("online-users", [...onlineUsers.keys()]);
+
+io.emit("user-online", {
+    userId,
+});
+
+console.log("User Online:", userId);
 
     });
 
@@ -55,23 +61,30 @@ module.exports = (io, socket, onlineUsers) => {
     // Voice Call
     // ==================================
 
-    socket.on("call-user", (data) => {
+    const usersInCall = new Set();
 
-        const receiverSocketId =
-            onlineUsers.get(data.receiverId);
+socket.on("call-user", (data) => {
+  const receiverSocketId = onlineUsers.get(data.receiverId);
 
-        if (!receiverSocketId) return;
-
-        io.to(receiverSocketId).emit(
-            "incoming-call",
-            {
-                callerId: data.callerId,
-                callerName: data.callerName,
-            }
-        );
-
+  if (!receiverSocketId) {
+    socket.emit("call-rejected", {
+      reason: "offline",
     });
+    return;
+  }
 
+  // User is already in another call
+  if (usersInCall.has(data.receiverId)) {
+    socket.emit("user-busy");
+    return;
+  }
+
+  io.to(receiverSocketId).emit("incoming-call", {
+    callerId: data.callerId,
+    callerName: data.callerName,
+    callType: data.callType || "audio",
+  });
+});
     // ==================================
     // WebRTC Signalling
     // ==================================
@@ -94,7 +107,8 @@ module.exports = (io, socket, onlineUsers) => {
     });
 
     socket.on("accept-call", (data) => {
-
+        usersInCall.add(data.callerId);
+        usersInCall.add(data.receiverId);
         const callerSocketId =
             onlineUsers.get(data.callerId);
 
@@ -123,15 +137,19 @@ module.exports = (io, socket, onlineUsers) => {
     });
 
     socket.on("end-call", (data) => {
-
+        usersInCall.delete(socket.userId);
+        usersInCall.delete(data.receiverId);
         const receiverSocketId =
             onlineUsers.get(data.receiverId);
 
         if (!receiverSocketId) return;
 
         io.to(receiverSocketId).emit(
-            "call-ended"
-        );
+    "call-ended",
+    {
+        senderId: socket.userId,
+    }
+);
 
     });
 
@@ -139,27 +157,41 @@ module.exports = (io, socket, onlineUsers) => {
     // Disconnect
     // ==================================
 
-    socket.on("disconnect", () => {
+    socket.on("disconnect", async () => {
 
-        if (socket.userId) {
+       if (socket.userId) {
+         usersInCall.delete(socket.userId);
 
-            // Remove only if this socket is the active socket
-            if (
-                onlineUsers.get(socket.userId) === socket.id
-            ) {
-                onlineUsers.delete(socket.userId);
-            }
+    socket.broadcast.emit("call-ended", {
+    senderId: socket.userId,
+  });
 
-            io.emit(
-                "online-users",
-                [...onlineUsers.keys()]
-            );
+    if (
+        onlineUsers.get(socket.userId) === socket.id
+    ) {
+        onlineUsers.delete(socket.userId);
 
-            console.log(
-                "User Offline:",
-                socket.userId
-            );
-        }
+        await User.findByIdAndUpdate(socket.userId, {
+            isOnline: false,
+            lastSeen: new Date(),
+        });
+
+        io.emit("user-offline", {
+            userId: socket.userId,
+            lastSeen: new Date(),
+        });
+    }
+
+    io.emit(
+        "online-users",
+        [...onlineUsers.keys()]
+    );
+
+    console.log(
+        "User Offline:",
+        socket.userId
+    );
+}
 
         console.log("Disconnected:", socket.id);
 

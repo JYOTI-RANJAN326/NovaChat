@@ -25,13 +25,13 @@ import {
   createReceiverPeer,
   signalPeer,
   destroyPeer,
+  stopLocalStream,
 } from "./services/webrtc";
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import { setOnlineUsers } from "./slices/socketSlice";
 import {
   setIncomingCall,
   clearIncomingCall,
-  
   clearOutgoingCall,
   startCall,
   endCall,
@@ -41,6 +41,7 @@ import IncomingCallModal from "./components/Call/IncomingCallModal";
 import CallScreen from "./components/Call/CallScreen";
 function App() {
   const dispatch = useDispatch();
+  
   useEffect(() => {
   const loadUser = async () => {
     dispatch(setLoading(true));
@@ -64,12 +65,15 @@ function App() {
   loadUser();
 }, [dispatch]);
   const remoteAudioRef = useRef(null);
+  const remoteVideoRef = useRef(null);
+const localVideoRef = useRef(null);
 
 const {
   incomingCall,
   outgoingCall,
   inCall,
   remoteUser,
+
 } = useSelector(
   (state) => state.call
 );
@@ -79,7 +83,16 @@ const { user } = useSelector(
 const startCaller = useCallback(async () => {
   if (!outgoingCall) return;
 
-  const stream = await getLocalStream();
+ const stream = await getLocalStream(
+    outgoingCall?.callType === "video"
+);
+if (
+    stream.getVideoTracks().length > 0 &&
+    localVideoRef.current
+) {
+    localVideoRef.current.srcObject = stream;
+}
+  //dispatch(setLocalStream(stream));
 
   createCallerPeer({
     stream,
@@ -95,26 +108,28 @@ const startCaller = useCallback(async () => {
     },
 
     onStream: (remoteStream) => {
+  const audio = remoteAudioRef.current;
 
-      if (remoteAudioRef.current) {
+  if (!audio) return;
 
-       remoteAudioRef.current.srcObject = remoteStream;
+  // Prevent attaching the same stream twice
+  if (audio.srcObject === remoteStream) return;
 
-remoteAudioRef.current
-  .play()
-  .catch(console.error);
+  console.log("🎵 Attaching Remote Stream:", remoteStream.id);
 
-      }
+  audio.srcObject = remoteStream;
 
-    },
+  audio.play().catch(console.error);
+},
 
-    onClose: () => {
+   onClose: () => {
+  stopLocalMedia();
 
-    destroyPeer();
-dispatch(endCall());
-dispatch(clearOutgoingCall());
+  destroyPeer();
 
-    },
+  dispatch(endCall());
+  dispatch(clearOutgoingCall());
+},
 
   });
 
@@ -125,7 +140,16 @@ dispatch(clearOutgoingCall());
 const startReceiver = useCallback(async () => {
   if (!incomingCall) return;
 
-  const stream = await getLocalStream();
+ const stream = await getLocalStream(
+    incomingCall?.callType === "video"
+);
+if (
+    stream.getVideoTracks().length > 0 &&
+    localVideoRef.current
+) {
+    localVideoRef.current.srcObject = stream;
+}
+ // dispatch(setLocalStream(stream));
 
   createReceiverPeer({
     stream,
@@ -140,26 +164,28 @@ const startReceiver = useCallback(async () => {
     },
 
     onStream: (remoteStream) => {
+  const audio = remoteAudioRef.current;
 
-      if (remoteAudioRef.current) {
+  if (!audio) return;
 
-       remoteAudioRef.current.srcObject = remoteStream;
+  // Prevent attaching the same stream twice
+  if (audio.srcObject === remoteStream) return;
 
-remoteAudioRef.current
-  .play()
-  .catch(console.error);
+  console.log("🎵 Attaching Remote Stream:", remoteStream.id);
 
-      }
+  audio.srcObject = remoteStream;
 
-    },
+  audio.play().catch(console.error);
+},
 
     onClose: () => {
+  stopLocalMedia();
 
-     destroyPeer();
-dispatch(endCall());
-dispatch(clearOutgoingCall());
+  destroyPeer();
 
-    },
+  dispatch(endCall());
+  dispatch(clearOutgoingCall());
+},
 
   });
 
@@ -167,11 +193,30 @@ dispatch(clearOutgoingCall());
   incomingCall,
   dispatch,
 ]);
+
+// const stopLocalMedia = useCallback(() => {
+//   if (!localStream) return;
+
+//   localStream.getTracks().forEach((track) => {
+//     track.stop();
+//   });
+// }, [localStream]);
+const stopLocalMedia = useCallback(() => {
+  stopLocalStream();
+}, []);
   // ===============================
   // Online Users
   // ===============================
 
   useEffect(() => {
+
+    socket.off("online-users");
+socket.off("incoming-call");
+socket.off("call-accepted");
+socket.off("call-rejected");
+socket.off("call-ended");
+socket.off("webrtc-signal");
+socket.off("user-busy");
   // ===============================
   // Online Users
   // ===============================
@@ -185,14 +230,24 @@ dispatch(clearOutgoingCall());
   // ===============================
 
   socket.on("incoming-call", (data) => {
+    console.log("Incoming Call", data);
+
     dispatch(setIncomingCall(data));
   });
+  
+  socket.on("user-busy", () => {
+  destroyPeer();
 
+  dispatch(clearOutgoingCall());
+
+  alert("User is already in another call.");
+});
   // ===============================
   // Call Accepted
   // ===============================
 
  socket.on("call-accepted", () => {
+console.log("Call Accepted");
 
  dispatch(startCall(outgoingCall));
 
@@ -207,10 +262,11 @@ dispatch(clearOutgoingCall());
 
  socket.on("call-rejected", () => {
 
-  dispatch(clearOutgoingCall());
+  stopLocalMedia();
+
   destroyPeer();
 
-  alert("Call Rejected");
+  dispatch(clearOutgoingCall());
 
 });
 
@@ -218,6 +274,8 @@ dispatch(clearOutgoingCall());
   // Call Ended
   // ===============================
 socket.on("call-ended", () => {
+
+  stopLocalMedia();
 
   destroyPeer();
 
@@ -228,25 +286,55 @@ socket.on("call-ended", () => {
 socket.on(
   "webrtc-signal",
   ({ signal }) => {
+     console.log("Received Signal", signal.type);
 
     signalPeer(signal);
 
   }
 );
 
+
+
   return () => {
     socket.off("online-users");
     socket.off("incoming-call");
     socket.off("call-accepted");
+    socket.off("user-busy");
     socket.off("call-rejected");
     socket.off("call-ended");
     socket.off("webrtc-signal");
-     destroyPeer();
+     
   };
 }, [
   dispatch,
   startCaller,
   startReceiver,
+]);
+useEffect(() => {
+  const handleLeave = () => {
+    if (!inCall || !remoteUser) return;
+
+    socket.emit("end-call", {
+      receiverId:
+        remoteUser.receiverId ||
+        remoteUser.callerId,
+    });
+
+    stopLocalMedia();
+    destroyPeer();
+  };
+
+  window.addEventListener("beforeunload", handleLeave);
+  window.addEventListener("pagehide", handleLeave);
+
+  return () => {
+    window.removeEventListener("beforeunload", handleLeave);
+    window.removeEventListener("pagehide", handleLeave);
+  };
+}, [
+  inCall,
+  remoteUser,
+  stopLocalMedia,
 ]);
   return (
     <>
@@ -287,15 +375,22 @@ socket.on(
 
       {inCall && (
  <CallScreen
-  remoteUser={remoteUser}
-  remoteAudioRef={remoteAudioRef}
-  onEnd={() => {
+remoteUser={remoteUser}
+    remoteAudioRef={remoteAudioRef}
+    remoteVideoRef={remoteVideoRef}
+    localVideoRef={localVideoRef}
+  callType={
+    remoteUser?.callType || "audio"
+  }
+ onEnd={() => {
 
   socket.emit("end-call", {
     receiverId:
       remoteUser.receiverId ||
       remoteUser.callerId,
   });
+
+  stopLocalMedia();
 
   destroyPeer();
 
@@ -305,7 +400,7 @@ socket.on(
 }}
 />
 )}
-      {outgoingCall && (
+ {outgoingCall && (
   <div
     className="
       fixed
@@ -314,24 +409,82 @@ socket.on(
       flex
       items-center
       justify-center
-      bg-black/60
+      bg-black/70
+      backdrop-blur-md
     "
   >
     <div
       className="
+        w-[360px]
         rounded-3xl
+        border
+        border-cyan-500/20
         bg-[#111C2F]
         p-8
         text-center
+        shadow-[0_0_40px_rgba(34,211,238,.15)]
       "
     >
-      <h2 className="text-2xl font-bold text-white">
+      {/* Avatar */}
+      <div
+        className="
+          mx-auto
+          flex
+          h-24
+          w-24
+          items-center
+          justify-center
+          rounded-full
+          bg-gradient-to-br
+          from-cyan-500
+          via-sky-500
+          to-blue-600
+          text-4xl
+          font-bold
+          text-white
+        "
+      >
+        {outgoingCall.receiverName
+          ?.charAt(0)
+          .toUpperCase()}
+      </div>
+
+      <h2 className="mt-6 text-2xl font-bold text-white">
         Calling...
       </h2>
 
-      <p className="mt-3 text-slate-400">
+      <p className="mt-2 text-slate-400">
         {outgoingCall.receiverName}
       </p>
+
+      <p className="mt-4 animate-pulse text-cyan-300">
+        Ringing...
+      </p>
+
+      <button
+        onClick={() => {
+          socket.emit("end-call", {
+            receiverId: outgoingCall.receiverId,
+          });
+             stopLocalMedia();
+          destroyPeer();
+          dispatch(endCall());
+          dispatch(clearOutgoingCall());
+        }}
+        className="
+          mt-8
+          rounded-full
+          bg-red-500
+          px-6
+          py-3
+          font-semibold
+          text-white
+          transition
+          hover:bg-red-600
+        "
+      >
+        Cancel Call
+      </button>
     </div>
   </div>
 )}

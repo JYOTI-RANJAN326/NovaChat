@@ -1,4 +1,5 @@
-import Peer from "simple-peer";
+//import Peer from "simple-peer";
+import Peer from "simple-peer/simplepeer.min.js";
 
 let peer = null;
 let localStream = null;
@@ -20,17 +21,27 @@ const ICE_CONFIG = {
 // Microphone
 // ===============================
 
-export const getLocalStream = async () => {
+export const getLocalStream = async (video = false) => {
   if (localStream) return localStream;
 
   localStream = await navigator.mediaDevices.getUserMedia({
-    audio: true,
-    video: false,
+    audio: {
+      echoCancellation: true,
+      noiseSuppression: true,
+      autoGainControl: true,
+    },
+    video,
   });
 
   return localStream;
 };
+export const stopLocalStream = () => {
+  if (!localStream) return;
 
+  localStream.getTracks().forEach((track) => track.stop());
+
+  localStream = null;
+};
 // ===============================
 // Permission Check
 // ===============================
@@ -59,6 +70,10 @@ export const createPeer = ({
   onClose,
   onError,
 }) => {
+  if (peer) {
+    peer.destroy();
+    peer = null;
+  }
   peer = new Peer({
     initiator,
     trickle: false,
@@ -68,22 +83,30 @@ export const createPeer = ({
 
   // Send SDP + ICE
   peer.on("signal", (signal) => {
-    onSignal?.(signal);
-  });
+  console.log("Generated Signal:", signal.type || "ICE");
+  onSignal?.(signal);
+});
 
   // Remote Audio
-  peer.on("stream", (remoteStream) => {
-    onStream?.(remoteStream);
-  });
-
+  peer.on("stream", (stream) => {
+      console.log("Remote stream:", stream.id);
+  console.log("Remote stream received");
+  remoteStream = stream;
+  onStream?.(stream);
+});
+  peer.on("connect", () => {
+  console.log("Peer Connected");
+});
   // Closed
   peer.on("close", () => {
-    onClose?.();
-  });
+  console.log("Peer Closed");
+  remoteStream = null;
+  onClose?.();
+});
 
   // Error
   peer.on("error", (error) => {
-    console.log("Peer Error:", error);
+  console.error("WebRTC Peer Error:", error);
 
     onError?.(error);
   });
@@ -145,7 +168,7 @@ export const createReceiverPeer = ({
 // ===============================
 
 export const signalPeer = (signal) => {
-  if (!peer) return;
+  if (!peer || !signal) return;
 
   peer.signal(signal);
 };
@@ -177,22 +200,32 @@ export const toggleMute = (mute) => {
     });
 };
 
+export const toggleCamera = (off) => {
+  if (!localStream) return;
+
+  localStream.getVideoTracks().forEach((track) => {
+    track.enabled = !off;
+  });
+};
+
 // ===============================
 // Destroy
 // ===============================
 
 export const destroyPeer = () => {
-  if (peer) {
-    peer.destroy();
-    peer = null;
+  try {
+    if (peer) {
+      peer.destroy();
+      peer = null;
+    }
+  } catch (err) {
+    console.error("Error destroying peer:", err);
   }
 
   if (localStream) {
-    localStream.getTracks().forEach((track) => {
-      track.stop();
-    });
-
-   localStream = null;
-remoteStream = null;
+    localStream.getTracks().forEach((track) => track.stop());
   }
+
+  localStream = null;
+  remoteStream = null;
 };
