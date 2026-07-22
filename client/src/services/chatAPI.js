@@ -46,24 +46,16 @@ export const searchChats = async (query) => {
 // Group Chats
 // =======================
 
-export const createGroupChat = async (data) => {
+export const createGroupChat = async (chatName, participants) => {
   const response = await axios.post(
     `${BASE_URL}/group`,
-    data,
-    axiosConfig
-  );
-
-  return response.data;
-};
-
-export const renameGroup = async (
-  groupId,
-  chatName
-) => {
-  const response = await axios.patch(
-    `${BASE_URL}/group/${groupId}/rename`,
-    { chatName },
-    axiosConfig
+    {
+      chatName,
+      participants,
+    },
+    {
+      withCredentials: true,
+    }
   );
 
   return response.data;

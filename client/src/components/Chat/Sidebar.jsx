@@ -20,6 +20,8 @@ import { logoutAPI } from "../../services/authAPI";
 import { logoutUser } from "../../slices/authSlice";
 import { socket } from "../../services/socket";
 import { useLocation } from "react-router-dom";
+import NewChatModal from "../Modals/NewChatModal";
+import CreateGroupModal from "../Modals/CreateGroupModal";
 
 const menuItems = [
   {
@@ -53,12 +55,15 @@ const menuItems = [
 const Sidebar = ({
   activeSection,
   setActiveSection,
+  
 }) => {
  
    const location = useLocation();
   const { user } = useSelector((state) => state.auth);
 const dispatch = useDispatch();
 const navigate = useNavigate();
+const [showNewChat, setShowNewChat] = useState(false);
+const [showCreateGroup, setShowCreateGroup] = useState(false);
 
 const handleLogout = async () => {
   try {
@@ -128,13 +133,45 @@ const handleLogout = async () => {
        <br/>
        <div className="mt-5 flex gap-3">
 
+ <div className="flex gap-5">
+
   <button
-    onClick={() => navigate("/new-chat")}
-    className="flex-1 rounded-xl  h-[35px] bg-cyan-600 py-2 text-sm font-semibold text-white transition hover:bg-cyan-500"
+    onClick={() => setShowNewChat(true)}
+    className="
+      flex-1
+      h-[45px]
+      w-[160px]
+      rounded-xl
+      bg-cyan-500
+      py-3
+      font-semibold
+      text-white
+      hover:bg-cyan-600
+      transition
+    "
   >
     + New Chat
   </button>
 
+  <button
+    onClick={() => setShowCreateGroup(true)}
+    className="
+      flex-1
+       h-[45px]
+        w-[160px]
+      rounded-xl
+      bg-[#1E40AF]
+      py-3
+      font-semibold
+      text-white
+      hover:bg-blue-700
+      transition
+    "
+  >
+    + New Group
+  </button>
+
+</div>
   
 
 </div>
@@ -201,7 +238,7 @@ const handleLogout = async () => {
     logout-btn
     flex
     h-[40px]
-    w-[269px]
+    w-[350px]
     
     items-center
     justify-center
@@ -225,10 +262,22 @@ const handleLogout = async () => {
       
     </div>
     
-  </motion.aside>
-  
+ </motion.aside>
+
+{showNewChat && (
+  <NewChatModal
+    onClose={() => setShowNewChat(false)}
+  />
+)}
+
+{showCreateGroup && (
+  <CreateGroupModal
+    onClose={() => setShowCreateGroup(false)}
+  />
+)}
+
 </>
-   
+
 );
 
 

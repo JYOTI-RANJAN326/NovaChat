@@ -2,17 +2,14 @@ import axios from "axios";
 
 const BASE_URL = "http://localhost:5000/api/v1/users";
 
-export const searchUsers = async (query) => {
-  const token = localStorage.getItem("token");
+const axiosConfig = {
+  withCredentials: true,
+};
 
+export const searchUsers = async (query) => {
   const response = await axios.get(
     `${BASE_URL}/search?query=${query}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      withCredentials: true,
-    }
+    axiosConfig
   );
 
   return response.data;

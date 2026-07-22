@@ -1,15 +1,11 @@
 import axios from "axios";
 
-export const getAllUsers = async () => {
-  const res = await axios.get(
-    "http://localhost:5000/api/v1/users",
-    {
-      withCredentials: true,
-    }
-  );
+const BASE_URL = "http://localhost:5000/api/v1/groups";
+
+// Create Group
 export const createGroup = async (chatName, participants) => {
   const res = await axios.post(
-    "http://localhost:5000/api/v1/groups",
+    BASE_URL,
     {
       chatName,
       participants,
@@ -21,5 +17,12 @@ export const createGroup = async (chatName, participants) => {
 
   return res.data;
 };
-  return res.data.users;
+
+// Get My Groups
+export const getAllGroups = async () => {
+  const res = await axios.get(BASE_URL, {
+    withCredentials: true,
+  });
+
+  return res.data;
 };
