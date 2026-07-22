@@ -14,6 +14,7 @@ const {
     updateProfile,
     changePassword,
     updateAvatar,
+    updateSettings,
 } = require("../controllers/user.controller");
 
 router.get("/me", protect, getMe);
@@ -34,5 +35,6 @@ upload.single("image"),
 updateAvatar
 
 );
+router.patch("/settings", protect, updateSettings);
 
 module.exports = router;

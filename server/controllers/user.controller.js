@@ -8,10 +8,13 @@ require("../utils/uploadToCloudinary");
 // ==============================
 exports.getMe = async (req, res) => {
   try {
+    const user = await User.findById(req.user._id)
+      .select("-password -refreshToken");
+
     return res.status(200).json({
       success: true,
       message: "Profile fetched successfully",
-      data: req.user,
+      data: user,
     });
   } catch (error) {
     console.error(error);
@@ -53,7 +56,7 @@ exports.searchUsers = async (req, res) => {
           },
         },
       ],
-    }).select("-password");
+    }).select("-password -refreshToken")
 
     return res.status(200).json({
       success: true,
@@ -80,12 +83,12 @@ exports.updateProfile = async (req, res) => {
 
   try {
 
-    const {
-      fullName,
-      username,
-      bio,
-    } = req.body;
-
+   const {
+    fullName,
+    username,
+    bio,
+    phone,
+} = req.body;
     const existingUsername = await User.findOne({
       username,
       _id: { $ne: req.user._id },
@@ -101,10 +104,11 @@ exports.updateProfile = async (req, res) => {
     const user = await User.findByIdAndUpdate(
       req.user._id,
       {
-        fullName,
-        username,
-        bio,
-      },
+    fullName,
+    username,
+    bio,
+    phone,
+},
       {
         new: true,
       }
@@ -147,8 +151,22 @@ exports.changePassword = async (req, res) => {
         message: "Both passwords are required",
       });
     }
+if (newPassword.length < 8) {
+  return res.status(400).json({
+    success: false,
+    message: "Password must be at least 8 characters long",
+  });
+}
 
-    const user = await User.findById(req.user._id);
+   const user = await User.findById(req.user._id)
+.select("+password");
+if (user.authProvider === "google") {
+  return res.status(400).json({
+    success: false,
+    message:
+      "Google accounts cannot change password. Please use Google Account settings.",
+  });
+}
 
     const isMatched = await bcrypt.compare(
       oldPassword,
@@ -257,7 +275,7 @@ data:user,
 
 }catch(error){
 
-console.log(error);
+console.error(error);
 
 return res.status(500).json({
 
@@ -270,3 +288,74 @@ message:"Server Error",
 }
 
 }
+// ==============================
+// Update User Settings
+// ==============================
+exports.updateSettings = async (req, res) => {
+  try {
+    const { settings } = req.body;
+
+    if (!settings) {
+      return res.status(400).json({
+        success: false,
+        message: "Settings data is required",
+      });
+    }
+
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Merge incoming settings with existing settings
+   // Merge nested settings
+user.settings = {
+  ...user.settings.toObject(),
+
+  appearance: {
+    ...user.settings.appearance.toObject(),
+    ...(settings.appearance || {}),
+  },
+
+  notifications: {
+    ...user.settings.notifications.toObject(),
+    ...(settings.notifications || {}),
+  },
+
+  privacy: {
+    ...user.settings.privacy.toObject(),
+    ...(settings.privacy || {}),
+  },
+
+  ai: {
+    ...user.settings.ai.toObject(),
+    ...(settings.ai || {}),
+  },
+
+  storage: {
+    ...user.settings.storage.toObject(),
+    ...(settings.storage || {}),
+  },
+};
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Settings updated successfully",
+      data: user.settings,
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
