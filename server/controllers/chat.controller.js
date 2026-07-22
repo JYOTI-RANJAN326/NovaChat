@@ -87,12 +87,15 @@ exports.getMyChats = async (req, res) => {
   try {
 
     const chats = await Chat.find({
+  participants: req.user._id,
 
-      participants: req.user._id,
+  deletedFor: {
+    $ne: req.user._id,
+  },
 
-      deletedFor: {
-        $ne: req.user._id,
-      },
+  archivedBy: {
+    $ne: req.user._id,
+  },
 
     })
       .populate("participants", "-password")
@@ -267,26 +270,20 @@ if (!isParticipant) {
 // Archive / Unarchive Chat
 // ======================================================
 exports.toggleArchiveChat = async (req, res) => {
-
   try {
-
     const { chatId } = req.params;
+    const userId = req.user._id;
 
     const chat = await Chat.findById(chatId);
 
     if (!chat) {
-
       return res.status(404).json({
-
         success: false,
-
         message: "Chat not found",
-
       });
-
     }
     const isParticipant = chat.participants.some(
-  (member) => member.toString() === req.user._id.toString()
+  member => member.toString() === userId.toString()
 );
 
 if (!isParticipant) {
@@ -295,48 +292,77 @@ if (!isParticipant) {
     message: "Access denied",
   });
 }
-    const archived = chat.archivedBy.some(
-      (id) => id.toString() === req.user._id.toString()
-    );
 
-    if (archived) {
+const alreadyArchived = chat.archivedBy.some(
+  (id) => id.toString() === userId.toString()
+);
 
-      chat.archivedBy.pull(req.user._id);
-
+    if (alreadyArchived) {
+     chat.archivedBy = chat.archivedBy.filter(
+  (id) => id.toString() !== userId.toString()
+);
     } else {
-
-      chat.archivedBy.addToSet(req.user._id);
-
+      chat.archivedBy.push(userId);
     }
 
     await chat.save();
 
     return res.status(200).json({
-
       success: true,
-
-      message: archived
-        ? "Chat unarchived successfully"
-        : "Chat archived successfully",
-
-      data: chat,
-
+      archived: !alreadyArchived,
+      message: alreadyArchived
+        ? "Chat unarchived"
+        : "Chat archived",
     });
+  } catch (err) {
+    console.error(err);
 
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
+// ======================================================
+// Get Archived Chats
+// ======================================================
+exports.getArchivedChats = async (req, res) => {
+  try {
+    const chats = await Chat.find({
+      participants: req.user._id,
+
+      archivedBy: req.user._id,
+
+      deletedFor: {
+        $ne: req.user._id,
+      },
+    })
+      .populate("participants", "-password")
+      .populate("admins", "-password")
+      .populate({
+        path: "lastMessage",
+        populate: {
+          path: "sender",
+          select: "fullName username profilePic",
+        },
+      })
+      .sort({
+        lastActivity: -1,
+      });
+
+    return res.status(200).json({
+      success: true,
+      message: "Archived chats fetched successfully",
+      data: chats,
+    });
   } catch (error) {
-
     console.log(error);
 
     return res.status(500).json({
-
       success: false,
-
       message: "Server Error",
-
     });
-
   }
-
 };
 
 // ======================================================

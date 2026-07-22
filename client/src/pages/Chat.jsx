@@ -5,10 +5,17 @@ import Sidebar from "../components/Chat/Sidebar";
 import ChatList from "../components/Chat/ChatList";
 import ChatWindow from "../components/Chat/ChatWindow";
 
+import AIChat from "../components/AI/AIChat";
+import PDFChat from "../components/AI/PDFChat";
+import CodeReviewer from "../components/AI/CodeReviewer";
+import AIToolsSidebar from "../components/AI/AIToolsSidebar";
+
 import useSocket from "../hooks/useSocket";
 
 const Chat = () => {
   const [selectedChat, setSelectedChat] = useState(null);
+  const [activeSection, setActiveSection] = useState("Chats");
+  const [activeTool, setActiveTool] = useState("chat");
 
   const { user } = useSelector((state) => state.auth);
 
@@ -17,75 +24,124 @@ const Chat = () => {
   return (
     <div
       className="
-      h-screen
-      overflow-hidden
-      bg-gradient-to-br
-      from-[#030712]
-      via-[#0B1120]
-      to-[#111827]
-      p-4
-    "
+        h-screen
+        overflow-hidden
+        bg-gradient-to-br
+        from-[#030712]
+        via-[#0B1120]
+        to-[#111827]
+        p-4
+      "
     >
-      {/* Ambient Glow */}
-
+      {/* Background Glow */}
       <div className="pointer-events-none absolute left-20 top-10 h-72 w-72 rounded-full bg-cyan-500/10 blur-[140px]" />
-
       <div className="pointer-events-none absolute bottom-0 right-0 h-96 w-96 rounded-full bg-blue-600/10 blur-[160px]" />
 
+      {/* Main Layout */}
       <div
         className="
-        relative
+          relative
+          flex
+          h-full
+          overflow-hidden
+          rounded-[28px]
+          border
+          border-white/10
+          bg-white/[0.03]
+          shadow-[0_25px_80px_rgba(0,0,0,0.45)]
+          backdrop-blur-3xl
+        "
+      >
+        {/* Left Sidebar */}
+        <div className="flex h-full flex-shrink-0 overflow-hidden">
+
+  {/* Main Navigation Sidebar */}
+  <Sidebar
+    activeSection={activeSection}
+    setActiveSection={setActiveSection}
+  />
+
+  {/* Second Sidebar */}
+  {activeSection === "AI Assistant" ? (
+    <AIToolsSidebar
+      activeTool={activeTool}
+      setActiveTool={setActiveTool}
+    />
+  ) : (
+    <ChatList
+      className="w-[340px] px-4 py-10"
+      selectedChat={selectedChat}
+      setSelectedChat={setSelectedChat}
+      activeSection={activeSection}
+    />
+  )}
+
+</div>
+
+        {/* Right Side */}
+        <div className="flex flex-1 flex-col w- overflow-hidden bg-[#0B1120]/40">
+{activeSection === "AI Assistant" ? (
+
+  <main className="flex flex-1 min-h-0 flex-col bg-[#0B1120] p-6">
+
+    <div
+      className="
         flex
         h-full
+        min-h-0
+        flex-1
+        flex-col
         overflow-hidden
-        rounded-[28px]
+        rounded-3xl
         border
         border-white/10
-        bg-white/[0.03]
-        shadow-[0_25px_80px_rgba(0,0,0,0.45)]
-        backdrop-blur-3xl
+        bg-[#111827]
+        shadow-2xl
       "
-      >
-        {/* Left Panel (Sidebar + Chat List) */}
+    >
+      {activeTool === "chat" && <AIChat />}
+      {activeTool === "pdf" && <PDFChat />}
+      {activeTool === "code" && <CodeReviewer />}
 
-<div
-  className={`
-    ${selectedChat ? "hidden lg:flex" : "flex"}
-    w-full
-    lg:w-[640px]
-    flex-shrink-0
-  `}
->
-  <Sidebar />
+      {activeTool === "image" && (
+        <div className="flex h-full items-center justify-center text-slate-400">
+          🚧 Image Analysis Coming Soon
+        </div>
+      )}
 
-  <ChatList className="w-full lg:w-[640px] px-4 py-10"
-    selectedChat={selectedChat}
-    setSelectedChat={setSelectedChat}
-  />
-</div>
-
-        {/* Chat Window */}
-
-      <div className="flex flex-1 flex-col overflow-hidden bg-[#0B1120]/40">
-  {selectedChat ? (
-    <ChatWindow
-  selectedChat={selectedChat}
-  setSelectedChat={setSelectedChat}
-/>
-  ) : (
-    <div className="flex flex-1 items-center justify-center">
-      <div className="text-center">
-        <h2 className="text-3xl font-bold text-white">
-          Welcome to NovaChat 👋
-        </h2>
-
-        <p className="mt-3 text-slate-400">
-          Select a conversation to start chatting.
-        </p>
-      </div>
+      {activeTool === "web" && (
+        <div className="flex h-full items-center justify-center text-slate-400">
+          🚧 Web Search Coming Soon
+        </div>
+      )}
     </div>
-  )}
-</div>
+
+  </main>
+
+) :  selectedChat ? (
+
+            <ChatWindow
+              selectedChat={selectedChat}
+              setSelectedChat={setSelectedChat}
+            />
+
+          ) : (
+
+            <div className="flex flex-1 items-center justify-center">
+              <div className="text-center">
+                <h2 className="text-3xl font-bold text-white">
+                  Welcome to NovaChat 👋
+                </h2>
+
+                <p className="mt-3 text-slate-400">
+                  Select a conversation to start chatting.
+                </p>
+              </div>
+            </div>
+
+          )}
+
+        </div>
       </div>
     </div>
   );

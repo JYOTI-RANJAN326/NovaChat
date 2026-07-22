@@ -1,4 +1,5 @@
 import axios from "axios";
+//import { apiConnector } from "./apiConnector";
 
 const BASE_URL = "http://localhost:5000/api/v1/chats";
 
@@ -37,6 +38,9 @@ export const searchChats = async (query) => {
 
   return response.data;
 };
+
+
+
 
 // =======================
 // Group Chats
@@ -124,6 +128,39 @@ export const leaveGroup = async (
   const response = await axios.patch(
     `${BASE_URL}/group/${groupId}/leave`,
     {},
+    axiosConfig
+  );
+
+  return response.data;
+};
+
+// =======================
+// Chat Actions
+// =======================
+
+export const togglePinChat = async (chatId) => {
+  const response = await axios.patch(
+    `${BASE_URL}/${chatId}/pin`,
+    {},
+    axiosConfig
+  );
+
+  return response.data;
+};
+
+export const toggleMuteChat = async (chatId) => {
+  const response = await axios.patch(
+    `${BASE_URL}/${chatId}/mute`,
+    {},
+    axiosConfig
+  );
+
+  return response.data;
+};
+
+export const deleteChat = async (chatId) => {
+  const response = await axios.delete(
+    `${BASE_URL}/${chatId}`,
     axiosConfig
   );
 

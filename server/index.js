@@ -14,7 +14,8 @@ const messageRoutes = require("./routes/message.routes");
 const { initializeSocket } = require("./socket/socket");
 const errorHandler = require("./middlewares/error.middleware");
 const uploadRoutes = require("./routes/upload.routes");
-
+const aiRoutes=require("./routes/ai.routes");
+const pdfRoutes = require("./routes/pdf.routes");
 connectDB();
 
 const app = express();
@@ -47,6 +48,8 @@ app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/chats", chatRoutes);
 app.use("/api/v1/groups", groupRoutes);
 app.use("/api/v1/messages", messageRoutes);
+app.use("/api/v1/ai", aiRoutes);
+app.use("/api/v1/pdf", pdfRoutes);
 
 // Test Route
 app.get("/", (req, res) => {

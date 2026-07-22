@@ -22,7 +22,7 @@ const {
 } = require("../controllers/message.controller");
 
 router.post("/", protect, sendMessage);
-router.get("/:chatId", protect, getMessages);
+
 router.patch("/:messageId", protect, editMessage);
 router.patch("/:messageId/delete-for-me", protect, deleteForMe);
 
@@ -54,11 +54,8 @@ router.get(
     protect,
     searchMessages
 );
-router.get(
-    "/starred/all",
-    protect,
-    getStarredMessages
-);
+router.get("/starred", protect, getStarredMessages);
+router.get("/:chatId", protect, getMessages);
 router.get(
     "/pinned/:chatId",
     protect,

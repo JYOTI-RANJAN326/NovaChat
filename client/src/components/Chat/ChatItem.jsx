@@ -1,17 +1,33 @@
 import { motion } from "framer-motion";
 import { useSelector } from "react-redux";
-import { FiPaperclip } from "react-icons/fi";
+import {
+  FiPaperclip,
+  FiMoreVertical,
+  FiArchive,
+} from "react-icons/fi";
+import { useEffect, useRef } from "react";
+import { useState } from "react";
+import {
+  toggleArchiveChat,
+} from "../../services/archiveAPI";
 
+import {
+  togglePinChat,
+  toggleMuteChat,
+  deleteChat,
+} from "../../services/chatAPI";
 const ChatItem = ({
   chat,
   currentUserId,
   onSelect,
   active,
+  refreshChats,
 }) => {
   const { onlineUsers = [] } = useSelector(
     (state) => state.socket || {}
   );
-
+const [showMenu, setShowMenu] = useState(false);
+const menuRef = useRef(null);
   const otherUser = chat.isGroupChat
     ? null
     : chat.participants.find(
@@ -111,8 +127,88 @@ const time = formatTime(
   const isPinned = chat.pinnedBy?.some(
     (id) => id.toString() === currentUserId
   );
+  const isArchived = chat.archivedBy?.some(
+  (id) => id.toString() === currentUserId
+);
+const isMuted = chat.mutedBy?.some(
+  (id) => id.toString() === currentUserId
+);
    const unreadCount =
   chat.unreadCounts?.[currentUserId] || 0;
+    useEffect(() => {
+  const handleClickOutside = (event) => {
+    if (
+      menuRef.current &&
+      !menuRef.current.contains(event.target)
+    ) {
+      setShowMenu(false);
+    }
+  };
+
+  document.addEventListener("mousedown", handleClickOutside);
+
+  return () => {
+    document.removeEventListener(
+      "mousedown",
+      handleClickOutside
+    );
+  };
+}, []);
+  const handleArchive = async (e) => {
+  e.stopPropagation();
+
+  try {
+    await toggleArchiveChat(chat._id);
+
+    // Close menu
+    setShowMenu(false);
+
+    // Temporary refresh
+   await refreshChats();
+
+  } catch (err) {
+    console.log(err);
+  }
+};
+const handlePin = async (e) => {
+  e.stopPropagation();
+
+  try {
+    await togglePinChat(chat._id);
+    setShowMenu(false);
+    refreshChats();
+  } catch (err) {
+    console.log(err);
+  }
+};
+const handleMute = async (e) => {
+  e.stopPropagation();
+
+  try {
+    await toggleMuteChat(chat._id);
+    setShowMenu(false);
+    refreshChats();
+  } catch (err) {
+    console.log(err);
+  }
+};
+const handleDelete = async (e) => {
+  e.stopPropagation();
+
+  const confirmDelete = window.confirm(
+    "Delete this chat?"
+  );
+
+  if (!confirmDelete) return;
+
+  try {
+    await deleteChat(chat._id);
+    setShowMenu(false);
+    refreshChats();
+  } catch (err) {
+    console.log(err);
+  }
+};
   return (
     <motion.div
       whileHover={{
@@ -127,13 +223,16 @@ const time = formatTime(
         stiffness: 300,
         damping: 20,
       }}
-      onClick={() => onSelect(chat)}
+      onClick={() => {
+  setShowMenu(false);
+  onSelect(chat);
+}}
       className={`
         group
         relative
         mb-3
         cursor-pointer
-        overflow-hidden
+        overflow-visible
         rounded-3xl
         border
         p-4
@@ -264,7 +363,10 @@ const time = formatTime(
 
           </div>
 
-          <div className="mt-2 flex items-center gap-2">
+         <div
+  
+  className="relative ml-2 flex flex-col items-center gap-2"
+>
 
             {chat.lastMessage?.attachment && (
               <FiPaperclip className="text-slate-500" />
@@ -278,32 +380,159 @@ const time = formatTime(
 
         </div>
 
-        <div className="ml-2 flex flex-col items-center gap-2">
-  {isPinned && (
-    <span className="text-base opacity-80">
-      📌
-    </span>
-  )}
+ <div 
+  ref={menuRef} 
+ className="relative ml-2 flex flex-col items-center gap-2">
 
-  {unreadCount > 0 && (
-    <div
+  {/* Three-dot menu */}
+  <button
+    onClick={(e) => {
+      e.stopPropagation();
+      setShowMenu(!showMenu);
+    }}
+    className="
+      rounded-full
+      p-1
+      text-slate-400
+      transition
+      hover:bg-white/10
+      hover:text-white
+    "
+  >
+    <FiMoreVertical size={18} />
+  </button>
+
+ {showMenu && (
+  <div
+    className="
+      absolute
+      right-0
+      top-8
+      z-50
+      w-52
+      overflow-hidden
+      rounded-2xl
+      border
+      border-white/10
+      bg-[#111827]
+      shadow-2xl
+      backdrop-blur-xl
+    "
+  >
+    <button
+      onClick={handlePin}
       className="
         flex
-        min-h-5
-        min-w-5
+        w-full
         items-center
-        justify-center
-        rounded-full
-        bg-cyan-500
-        px-1.5
-        text-[11px]
-        font-semibold
+        gap-3
+        px-4
+        py-3
+        text-sm
         text-white
+        transition
+        hover:bg-white/10
       "
     >
-      {unreadCount > 99 ? "99+" : unreadCount}
-    </div>
-  )}
+      <span className="text-lg">📌</span>
+      {isPinned ? "Unpin Chat" : "Pin Chat"}
+    </button>
+
+    <button
+      onClick={handleArchive}
+      className="
+        flex
+        w-full
+        items-center
+        gap-3
+        px-4
+        py-3
+        text-sm
+        text-white
+        transition
+        hover:bg-white/10
+      "
+    >
+      <FiArchive className="text-base" />
+      {isArchived ? "Unarchive Chat" : "Archive Chat"}
+    </button>
+
+    <button
+      onClick={handleMute}
+      className="
+        flex
+        w-full
+        items-center
+        gap-3
+        px-4
+        py-3
+        text-sm
+        text-white
+        transition
+        hover:bg-white/10
+      "
+    >
+      <span className="text-lg">🔕</span>
+      {isMuted ? "Unmute Chat" : "Mute Chat"}
+    </button>
+
+    <button
+      onClick={handleDelete}
+      className="
+        flex
+        w-full
+        items-center
+        gap-3
+        border-t
+        border-white/10
+        px-4
+        py-3
+        text-sm
+        text-red-400
+        transition
+        hover:bg-red-500/10
+      "
+    >
+      <span className="text-lg">🗑</span>
+      Delete Chat
+    </button>
+  </div>
+)}
+
+{/* Pinned Icon */}
+{isPinned && (
+  <span
+    className="
+      text-yellow-400
+      text-lg
+      opacity-90
+    "
+    title="Pinned Chat"
+  >
+    📌
+  </span>
+)}
+
+{/* Unread Count */}
+{unreadCount > 0 && (
+  <div
+    className="
+      flex
+      min-h-5
+      min-w-5
+      items-center
+      justify-center
+      rounded-full
+      bg-cyan-500
+      px-1.5
+      text-[11px]
+      font-semibold
+      text-white
+    "
+  >
+    {unreadCount > 99 ? "99+" : unreadCount}
+  </div>
+)}
 </div>
 
       </div>

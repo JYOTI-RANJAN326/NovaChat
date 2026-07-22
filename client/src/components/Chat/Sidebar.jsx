@@ -50,7 +50,10 @@ const menuItems = [
   },
 ];
 
-const Sidebar = () => {
+const Sidebar = ({
+  activeSection,
+  setActiveSection,
+}) => {
  
    const location = useLocation();
   const { user } = useSelector((state) => state.auth);
@@ -74,14 +77,14 @@ const handleLogout = async () => {
     );
   }
 };
-const routeMap = {
-  Chats: "/chat",
-  Groups: "/groups",
-  Starred: "/starred",
-  Archived: "/archived",
-  "AI Assistant": "/ai",
-  Settings: "/settings",
-};
+// const routeMap = {
+//   Chats: "/chat",
+//   Groups: "/groups",
+//   Starred: "/starred",
+//   Archived: "/archived",
+//   "AI Assistant": "/ai",
+//   Settings: "/settings",
+// };
   return (
     <>
   <motion.aside
@@ -148,11 +151,16 @@ const routeMap = {
     key={item.title}
     icon={item.icon}
     title={item.title}
-    active={
-        location.pathname === routeMap[item.title]
-    }
+   active={activeSection === item.title}
     badge={item.badge}
-    onClick={() => navigate(routeMap[item.title])}
+    onClick={() => {
+  if (item.title === "Settings") {
+    navigate("/settings");
+    return;
+  }
+
+  setActiveSection(item.title);
+}}
 />
           ))}
         </div>

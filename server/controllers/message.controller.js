@@ -628,10 +628,9 @@ if (!isParticipant) {
 };
 
 exports.toggleStarMessage = async (req, res) => {
-
   try {
-
     const { messageId } = req.params;
+    const userId = req.user._id;
 
     const message = await Message.findById(messageId);
 
@@ -643,41 +642,36 @@ exports.toggleStarMessage = async (req, res) => {
     }
 
     const starred = message.starredBy.some(
-      id => id.toString() === req.user._id.toString()
+      (id) => id.toString() === userId.toString()
     );
 
     if (starred) {
-      message.starredBy.pull(req.user._id);
+      message.starredBy = message.starredBy.filter(
+        (id) => id.toString() !== userId.toString()
+      );
     } else {
-      message.starredBy.addToSet(req.user._id);
+      message.starredBy.push(userId);
     }
 
     await message.save();
 
     return res.status(200).json({
       success: true,
+      starred: !starred,
       message: starred
-        ? "Message unstarred"
-        : "Message starred",
+        ? "Message unstarred successfully"
+        : "Message starred successfully",
       data: message,
     });
-
   } catch (error) {
-
     console.log(error);
 
     return res.status(500).json({
       success: false,
       message: "Server Error",
     });
-
   }
-
 };
-
-
-
-
 
 
 exports.togglePinMessage = async (req, res) => {
@@ -719,14 +713,20 @@ exports.togglePinMessage = async (req, res) => {
 
 exports.getStarredMessages = async (req, res) => {
     try {
-        const messages = await Message.find({
-            starredBy: req.user._id,
-            deletedFor: { $ne: req.user._id },
-        })
-            .populate("sender", "fullName username profilePic")
-            .populate("chat")
-            .sort({ createdAt: -1 });
-
+const messages = await Message.find({
+  starredBy: req.user._id,
+  deletedFor: { $ne: req.user._id },
+  isDeletedForEveryone: false,
+})
+  .populate("sender", "fullName username profilePic")
+  .populate({
+    path: "chat",
+    populate: {
+      path: "participants",
+      select: "fullName username profilePic isOnline",
+    },
+  })
+  .sort({ createdAt: -1 });
         return res.status(200).json({
             success: true,
             data: messages,

@@ -7,13 +7,13 @@ const { protect } = require("../middlewares/auth.middleware");
 const {
   createChat,
   getMyChats,
+  getArchivedChats,
   searchChats,
   togglePinChat,
   toggleArchiveChat,
   toggleMuteChat,
   deleteChat,
 } = require("../controllers/chat.controller");
-
 
 // ======================================================
 // Create Personal Chat
@@ -24,7 +24,10 @@ router.post("/", protect, createChat);
 // Get All Chats
 // ======================================================
 router.get("/", protect, getMyChats);
-
+// ======================================================
+// Get Archived Chats
+// ======================================================
+router.get("/archived", protect, getArchivedChats);
 // ======================================================
 // Search Chats
 // Example:

@@ -5,24 +5,48 @@ import {
   FiMessageCircle,
 } from "react-icons/fi";
 import { useSelector } from "react-redux";
-
+import { getStarredMessages } from "../../services/starAPI";
 import ChatItem from "./ChatItem";
 import { getMyChats } from "../../services/chatAPI";
+import { getArchivedChats } from "../../services/archiveAPI";
 //import CreateGroupModal from "./CreateGroupModal";
-
-const ChatList = ({ selectedChat, setSelectedChat }) => {
+import StarredMessageItem from "./StarredMessageItem";
+const ChatList = ({
+  selectedChat,
+  setSelectedChat,
+  activeSection,
+}) => {
   const [chats, setChats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showGroupModal, setShowGroupModal] =
     useState(false);
     const [search, setSearch] = useState("");
-
+const [starredMessages, setStarredMessages] = useState([]);
   const { user } = useSelector((state) => state.auth);
 
-  useEffect(() => {
+ useEffect(() => {
+  if (activeSection === "Archived") {
+    fetchArchivedChats();
+  } else if (activeSection === "Starred") {
+    fetchStarredMessages();
+  } else {
     fetchChats();
-  }, []);
+  }
+}, [activeSection]);
 
+const fetchArchivedChats = async () => {
+  try {
+    setLoading(true);
+
+    const response = await getArchivedChats();
+
+    setChats(response.data || []);
+  } catch (error) {
+    console.log(error);
+  } finally {
+    setLoading(false);
+  }
+};
   const fetchChats = async () => {
     try {
       const response = await getMyChats();
@@ -33,32 +57,89 @@ const ChatList = ({ selectedChat, setSelectedChat }) => {
       setLoading(false);
     }
   };
+ const refreshChats = async () => {
+  if (activeSection === "Archived") {
+    await fetchArchivedChats();
+  } else if (activeSection === "Starred") {
+    await fetchStarredMessages();
+  } else {
+    await fetchChats();
+  }
+};
+const handleOpenStarred = (message) => {
+  setSelectedChat(message.chat);
+};
+const fetchStarredMessages = async () => {
+  try {
+    setLoading(true);
 
+    const response = await getStarredMessages();
 
+    setStarredMessages(response.data || []);
+  } catch (error) {
+    console.log(error);
+  } finally {
+    setLoading(false);
+  }
+};
+let filteredChats = [...chats];
 
-  const filteredChats = chats
-  .filter((chat) => {
-    const chatName = chat.isGroupChat
-      ? chat.chatName
-      : chat.participants.find(
-          (p) => p._id !== user?._id
-        )?.fullName || "";
+// Sidebar filter
+switch (activeSection) {
+ case "Chats":
+  filteredChats = filteredChats.filter(
+    (chat) => !chat.isGroupChat
+  );
+  break;
 
-    return chatName
-      .toLowerCase()
-      .includes(search.toLowerCase());
-  })
-  .sort((a, b) => {
-    const timeA = new Date(
-      a.latestMessage?.createdAt || a.updatedAt
-    ).getTime();
+  case "Groups":
+    filteredChats = filteredChats.filter(
+      (chat) => chat.isGroupChat
+    );
+    break;
 
-    const timeB = new Date(
-      b.latestMessage?.createdAt || b.updatedAt
-    ).getTime();
+ case "Archived":
+  // Data already comes from /chat/archived
+  
+  break;
+  case "Starred":
+  // Starred messages are handled separately
+  break;
 
-    return timeB - timeA;
-  });
+  case "AI Assistant":
+    filteredChats = [];
+    break;
+
+  default:
+    break;
+}
+
+// Search filter
+filteredChats = filteredChats.filter((chat) => {
+  const chatName = chat.isGroupChat
+    ? chat.chatName
+    : chat.participants.find(
+        (p) => p._id !== user?._id
+      )?.fullName || "";
+
+  return chatName
+    .toLowerCase()
+    .includes(search.toLowerCase());
+});
+
+// Latest first
+filteredChats.sort((a, b) => {
+  const timeA = new Date(
+    a.latestMessage?.createdAt || a.updatedAt
+  ).getTime();
+
+  const timeB = new Date(
+    b.latestMessage?.createdAt || b.updatedAt
+  ).getTime();
+
+  return timeB - timeA;
+});
+ 
   return (
     <aside
       className="
@@ -80,12 +161,14 @@ const ChatList = ({ selectedChat, setSelectedChat }) => {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-3xl font-bold text-white">
-              Chats
+             {activeSection}
             </h2>
             
             <p className="mt-1 text-sm text-slate-400">
-              {filteredChats.length} Conversations
-            </p>
+  {activeSection === "Starred"
+    ? `${starredMessages.length} Messages`
+    : `${filteredChats.length} Conversations`}
+</p>
           </div>
 
           <button
@@ -163,49 +246,71 @@ const ChatList = ({ selectedChat, setSelectedChat }) => {
         py-9
       "
       >
-        {loading ? (
-          <div className="mt-16 flex flex-col items-center">
-            <div
-              className="
-              h-10
-              w-10
-              animate-spin
-              rounded-full
-              border-4
-              
-              border-cyan-500
-              border-t-transparent
-            "
-            />
+{loading ? (
+  <div className="mt-16 flex flex-col items-center">
+    <div
+      className="
+        h-10
+        w-10
+        animate-spin
+        rounded-full
+        border-4
+        border-cyan-500
+        border-t-transparent
+      "
+    />
+    <p className="mt-4 text-slate-400">
+      Loading...
+    </p>
+  </div>
+) : activeSection === "Starred" ? (
 
-            <p className="mt-4 text-slate-400">
-              Loading conversations...
-            </p>
-          </div>
-        ) : chats.length === 0 ? (
-          <div className="mt-24 text-center">
-            <FiMessageCircle className="mx-auto text-5xl text-slate-600" />
+  starredMessages.length === 0 ? (
+    <div className="mt-24 text-center">
+      <FiMessageCircle className="mx-auto text-5xl text-slate-600" />
+      <h3 className="mt-5 text-xl font-semibold text-white">
+        No Starred Messages
+      </h3>
+      <p className="mt-4 text-sm text-slate-400">
+        Star messages to see them here.
+      </p>
+    </div>
+  ) : (
+    starredMessages.map((message) => (
+  <StarredMessageItem
+    key={message._id}
+    message={message}
+    onOpenChat={handleOpenStarred}
+  />
+))
+  )
 
-            <h3 className="mt-5 text-xl font-semibold text-white">
-              No Conversations
-            </h3>
+) : filteredChats.length === 0 ? (
 
-            <p className="mt-4 text-sm text-slate-400">
-              Start chatting with someone to see
-              your conversations here.
-            </p>
-          </div>
-        ) : (
-          filteredChats.map((chat) => (
-            <ChatItem
-              key={chat._id}
-              chat={chat}
-              currentUserId={user?._id}
-              active={selectedChat?._id === chat._id}
-              onSelect={setSelectedChat}
-            />
-          ))
-        )}
+  <div className="mt-24 text-center">
+    <FiMessageCircle className="mx-auto text-5xl text-slate-600" />
+    <h3 className="mt-5 text-xl font-semibold text-white">
+      No {activeSection}
+    </h3>
+    <p className="mt-4 text-sm text-slate-400">
+      No {activeSection.toLowerCase()} available.
+    </p>
+  </div>
+
+) : (
+
+  filteredChats.map((chat) => (
+    <ChatItem
+      key={chat._id}
+      chat={chat}
+      currentUserId={user?._id}
+      active={selectedChat?._id === chat._id}
+      onSelect={setSelectedChat}
+      refreshChats={refreshChats}
+    />
+  ))
+
+)}
       </div>
   
       {showGroupModal && (

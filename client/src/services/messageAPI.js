@@ -112,3 +112,16 @@ export const togglePinMessage = async (messageId) => {
 
   return response.data;
 };
+export const archiveChat = (chatId) => {
+  return axios.get(
+    "PATCH",
+    `/chat/${chatId}/archive`
+  );
+};
+
+export const starMessage = (messageId) =>{
+  return axios.get(
+    "PATCH",
+    `/message/${messageId}/star`
+  );
+};
