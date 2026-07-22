@@ -206,6 +206,8 @@ Add screenshots here.
 Home
 Chat Window
 Group Chat
+Voice Call
+Video Call
 AI Assistant
 PDF Chat
 Code Reviewer
@@ -216,10 +218,6 @@ Settings
 
 # 🚀 Future Improvements
 
-- Voice Messages
-- Video Calling
-- Read Receipts
-- Emoji Reactions
 - Message Scheduling
 - Screen Sharing
 - Chat Themes
