@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 import Sidebar from "../components/Chat/Sidebar";
 import ChatList from "../components/Chat/ChatList";
 import ChatWindow from "../components/Chat/ChatWindow";
-
+import WelcomeScreen from "../components/AI/WelcomeScreen";
 import AIChat from "../components/AI/AIChat";
 import PDFChat from "../components/AI/PDFChat";
 import CodeReviewer from "../components/AI/CodeReviewer";
@@ -147,6 +147,7 @@ const Chat = () => {
         shadow-2xl
       "
     >
+      {!activeTool && <WelcomeScreen />}
      {activeTool === "chat" && (
   <AIChat setActiveTool={setActiveTool} />
 )}

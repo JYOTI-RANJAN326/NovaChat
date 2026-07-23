@@ -277,8 +277,8 @@ export default function AIToolsSidebar({
       <br/>
       <br/>
     <br/>
-     <br/>
-      <br/>
+     
+      
       {/* Pro Tip */}
 
      <div
