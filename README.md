@@ -201,7 +201,7 @@ npm start
 ## 🏗️ System Architecture
 
 <p align="center">
-  <img src="./images/architecture.png" alt="NovaChat System Architecture" width="900" />
+  <img src="./images/architecturenova.png" alt="NovaChat System Architecture" width="900" />
 </p>
 
 ---
@@ -218,7 +218,7 @@ npm start
   <img src="./images/signup.png" alt="NexLearn SignUppage" width="900" />
 </p>
 <p align="center">
-  <img src="./images/chat.png" alt="NexLearn Chatpage" width="900" />
+  <img src="./images/chats.png" alt="NexLearn Chatpage" width="900" />
 </p>
 <p align="center">
   <img src="./images/ai1.png" alt="NexLearn AIpage" width="900" />
