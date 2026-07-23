@@ -205,7 +205,7 @@ npm start
 </p>
 
 ---
----
+
 
 
 ## 🖥️ Platform Preview
@@ -226,22 +226,16 @@ npm start
 <p align="center">
   <img src="./images/ai2.png" alt="NexLearn AIpage" width="900" />
 </p>
+<p align="center">
+  <img src="./images/ai4.png" alt="NexLearn AIpage" width="900" />
+</p>
+<p align="center">
+  <img src="./images/ai5.png" alt="NexLearn AIpage" width="900" />
+</p>
 
 ---
    
-```
-Home
-Chat Window
-Group Chat
-Voice Call
-Video Call
-AI Assistant
-PDF Chat
-Code Reviewer
-Settings
-```
 
----
 
 # 🚀 Future Improvements
 
