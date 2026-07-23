@@ -1,8 +1,7 @@
 
 
-
-import HeroSection from "../components/Auth/HeroSection";
-import LoginCard from "../components/Auth/LoginCard";
+import HeroSection from "../components/auth/HeroSection";
+import LoginCard from "../components/auth/LoginCard";
 import earthBg from "../assets/background/earthBg.png";
 const Login = () => {
   return (

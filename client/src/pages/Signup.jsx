@@ -1,5 +1,5 @@
-import HeroSection from "../components/Auth/HeroSection";
-import SignupCard from "../components/Auth/SignupCard";
+import HeroSection from "../components/auth/HeroSection";
+import SignupCard from "../components/auth/SignupCard";
 import earthBg from "../assets/background/earthBg.png";
 
 
