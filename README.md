@@ -198,10 +198,31 @@ npm start
 
 ---
 
-# 📸 Screenshots
+## 🏗️ System Architecture
 
-Add screenshots here.
+<p align="center">
+  <img src="./images/architecture.png" alt="NovaChat System Architecture" width="900" />
+</p>
+---
+## 🖥️ Platform Preview
+<p align="center">
+  <img src="./images/login.png" alt="NexLearn Loginpage" width="900" />
+</p>
+<p align="center">
+  <img src="./images/signup.png" alt="NexLearn SignUppage" width="900" />
+</p>
+<p align="center">
+  <img src="./images/chat.png" alt="NexLearn Chatpage" width="900" />
+</p>
+<p align="center">
+  <img src="./images/ai1.png" alt="NexLearn AIpage" width="900" />
+</p>
+<p align="center">
+  <img src="./images/ai2.png" alt="NexLearn AIpage" width="900" />
+</p>
 
+
+   
 ```
 Home
 Chat Window
