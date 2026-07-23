@@ -230,7 +230,8 @@ const handleDelete = async (e) => {
       className={`
         group
         relative
-        mb-3
+        mx-2
+        mb-4
         cursor-pointer
         overflow-visible
         rounded-3xl

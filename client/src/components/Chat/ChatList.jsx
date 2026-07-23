@@ -234,7 +234,7 @@ filteredChats.sort((a, b) => {
       </div>
        
       {/* Chat List */}
-<br/>
+
       <div
         className="
         flex-1
@@ -298,7 +298,6 @@ filteredChats.sort((a, b) => {
   </div>
 
 ) : (
-
  filteredChats.map((chat) => (
   <div key={chat._id} className="mb-10">
     <ChatItem

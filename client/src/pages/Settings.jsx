@@ -7,9 +7,10 @@ import {
   FiUser,
   FiLogOut,
   FiChevronRight,
-  FiArrowLeft,
+  
 } from "react-icons/fi";
-
+import { useNavigate } from "react-router-dom";
+import { FiArrowLeft } from "react-icons/fi";
 import AppearanceSettings from "../components/settings/AppearanceSettings";
 import NotificationSettings from "../components/settings/NotificationSettings";
 import PrivacySettings from "../components/settings/PrivacySettings";
@@ -22,7 +23,7 @@ import { FiHardDrive } from "react-icons/fi";
 import StorageSettings from "../components/settings/StorageSettings";
 function Settings() {
   const [activeTab, setActiveTab] = useState("home");
-
+const navigate = useNavigate();
   return (
     <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#030712] via-[#0B1120] to-[#111827] p-8">
       {/* Background Glow */}
@@ -33,34 +34,55 @@ function Settings() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45 }}
-        className="relative mx-auto max-w-5xl rounded-[32px] border border-white/10 bg-white/[0.04] p-8 backdrop-blur-2xl shadow-[0_25px_80px_rgba(0,0,0,.45)]"
+       className="relative mx-auto max-w-6xl rounded-[36px] border border-white/10 bg-white/[0.04] p-10 backdrop-blur-3xl shadow-[0_30px_90px_rgba(0,0,0,.45)]"
       >
         {/* Header */}
-        <div className="mb-8">
-          {activeTab !== "home" && (
-            <button
-              onClick={() => setActiveTab("home")}
-              className="mb-6 flex items-center gap-2 rounded-xl bg-cyan-500/10 px-4 py-2 text-cyan-400 transition hover:bg-cyan-500/20"
-            >
-              <FiArrowLeft />
-              Back
-            </button>
-          )}
+     {/* Header */}
+<div className="mb-8">
 
-          <h1 className="text-4xl font-bold text-white">
-            {activeTab === "home"
-              ? "Settings"
-              : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
-          </h1>
+  {/* Back Button */}
+  <button
+    onClick={() => {
+      if (activeTab === "home") {
+        navigate("/chat");
+      } else {
+        setActiveTab("home");
+      }
+    }}
+    className="
+      mb-6
+      flex
+      items-center
+      gap-2
+      rounded-xl
+      bg-cyan-500/10
+      px-4
+      py-2
+      text-cyan-400
+      transition-all
+      hover:bg-cyan-500/20
+      hover:text-cyan-300
+    "
+  >
+    <FiArrowLeft size={18} />
+    Back
+  </button>
 
-          <p className="mt-2 text-slate-400">
-            Customize your NovaChat experience.
-          </p>
-        </div>
+  <h1 className="text-4xl font-bold text-white">
+    {activeTab === "home"
+      ? "Settings"
+      : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+  </h1>
+
+  <p className="mt-2 text-slate-400">
+    Customize your NovaChat experience.
+  </p>
+
+</div>
 
         {/* Home */}
         {activeTab === "home" && (
-          <div className="space-y-5">
+          <div className="space-y-4">
             <SettingCard
               icon={<FiMoon />}
               title="Appearance"
@@ -160,47 +182,90 @@ const SettingCard = ({
     <button
       onClick={onClick}
       className="
+        group
+        relative
         flex
         w-full
         items-center
         justify-between
-        rounded-2xl
+        overflow-hidden
+        rounded-3xl
         border
         border-white/10
-        bg-white/[0.03]
-        p-5
+        bg-gradient-to-r
+        from-white/[0.03]
+        to-white/[0.015]
+        px-6
+        py-5
         transition-all
         duration-300
-        hover:translate-x-1
         hover:border-cyan-500/30
         hover:bg-white/[0.06]
+        hover:shadow-[0_0_30px_rgba(34,211,238,.15)]
       "
     >
-      <div className="flex items-center gap-4">
+      {/* Left glow */}
+      <div
+        className="
+          absolute
+          inset-y-0
+          left-0
+          w-1
+          scale-y-0
+          rounded-r-full
+          bg-cyan-400
+          transition-transform
+          duration-300
+          group-hover:scale-y-100
+        "
+      />
+
+      <div className="flex items-center gap-5">
+
         <div
           className="
-            rounded-xl
-            bg-cyan-500/10
-            p-3
-            text-xl
-            text-cyan-400
+            flex
+            h-14
+            w-14
+            items-center
+            justify-center
+            rounded-2xl
+            bg-gradient-to-br
+            from-cyan-500/20
+            to-blue-600/20
+            text-2xl
+            text-cyan-300
+            transition
+            group-hover:scale-110
           "
         >
           {icon}
         </div>
 
         <div className="text-left">
-          <h3 className="font-semibold text-white">
+
+          <h3 className="text-lg font-semibold text-white">
             {title}
           </h3>
 
-          <p className="text-sm text-slate-400">
+          <p className="mt-1 text-sm text-slate-400">
             {subtitle}
           </p>
+
         </div>
+
       </div>
 
-      <FiChevronRight className="text-slate-500" />
+      <FiChevronRight
+        className="
+          text-slate-500
+          transition
+          duration-300
+          group-hover:translate-x-1
+          group-hover:text-cyan-300
+        "
+        size={22}
+      />
     </button>
   );
 };

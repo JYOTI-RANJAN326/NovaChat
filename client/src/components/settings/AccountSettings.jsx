@@ -36,7 +36,7 @@ const [avatar, setAvatar] = useState("");
   try {
     const res = await getProfile();
 
-    const user = res.data.data;
+    const user = res.data;
 
     setForm((prev) => ({
       ...prev,
@@ -105,7 +105,7 @@ const handleAvatarUpload = async (e) => {
   try {
     const res = await updateAvatar(file);
 
-   setAvatar(res.data.data.profilePic);
+   setAvatar(res.data.req.profilePic);
 
     toast.success("Profile picture updated");
 
@@ -120,15 +120,49 @@ const handleAvatarUpload = async (e) => {
 
       {/* Profile Picture */}
 
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-8">
+      <div
+  className="
+    rounded-3xl
+    border
+    border-white/10
+    bg-gradient-to-br
+    from-white/[0.05]
+    to-white/[0.02]
+    p-8
+    shadow-[0_10px_40px_rgba(0,0,0,.35)]
+    backdrop-blur-2xl
+  "
+>
 
         <h2 className="text-2xl font-semibold text-white">
           Profile
         </h2>
 
-        <div className="mt-8 flex items-center gap-6">
+        <div className="mt-8 flex flex-col items-center gap-6 md:flex-row">
 
-          <div className="h-24 w-24 overflow-hidden rounded-full">
+          <label
+  htmlFor="avatar-upload"
+  className="
+    absolute
+    bottom-1
+    right-1
+    flex
+    h-10
+    w-10
+    cursor-pointer
+    items-center
+    justify-center
+    rounded-full
+    bg-cyan-500
+    text-white
+    shadow-lg
+    transition
+    hover:scale-110
+    hover:bg-cyan-600
+  "
+>
+  <FiCamera />
+</label>
 
   {avatar ? (
 
@@ -146,7 +180,7 @@ const handleAvatarUpload = async (e) => {
 
   )}
 
-</div>
+{/* //</div> */}
          <input
   id="avatar-upload"
   type="file"
@@ -260,24 +294,30 @@ const handleAvatarUpload = async (e) => {
       await handlePasswordChange();
     }
   }}
-        className="
-          w-full
-          rounded-2xl
-          bg-cyan-500
-          py-4
-          text-lg
-          font-semibold
-          text-white
-          transition
-          hover:bg-cyan-600
-        "
+       className="
+w-full
+rounded-2xl
+bg-gradient-to-r
+from-cyan-500
+to-blue-600
+py-4
+text-lg
+font-semibold
+text-white
+transition-all
+duration-300
+hover:scale-[1.02]
+hover:shadow-[0_0_35px_rgba(34,211,238,.25)]
+"
       >
         Save Changes
       </button>
 
       {/* Danger Zone */}
 
-      <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6">
+      <div className="rounded-3xl border border-red-500/20 bg-gradient-to-br
+from-red-500/10
+to-red-500/5 p-6">
 
         <h2 className="text-xl font-semibold text-red-400">
           Danger Zone

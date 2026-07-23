@@ -2,8 +2,8 @@ import { useState } from "react";
 import AIWorkspace from "./AIWorkspace";
 import { uploadPDF, pdfChat } from "../../services/pdfAPI";
 import { FiUploadCloud } from "react-icons/fi";
-
-const PDFChat = () => {
+import { FiArrowLeft } from "react-icons/fi";
+const PDFChat = ({ setActiveTool }) => {
   const [file, setFile] = useState(null);
   const [pdfId, setPdfId] = useState(null);
 
@@ -125,6 +125,7 @@ const PDFChat = () => {
 
   return (
     <AIWorkspace
+  setActiveTool={setActiveTool}
       header="📄 AI PDF Assistant"
 topPanel={
   <div className="p-6">

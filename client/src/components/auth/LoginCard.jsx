@@ -67,7 +67,19 @@ if (!emailRegex.test(formData.email.trim())) {
       password: formData.password,
     });
 
-   dispatch(
+  // Save to localStorage
+localStorage.setItem(
+  "token",
+  JSON.stringify(response.token)
+);
+
+localStorage.setItem(
+  "user",
+  JSON.stringify(response.user)
+);
+
+// Update Redux
+dispatch(
   setUser({
     user: response.user,
     token: response.token,
@@ -77,7 +89,6 @@ if (!emailRegex.test(formData.email.trim())) {
 toast.success(response.message);
 
 navigate("/chat");
-
   } catch (error) {
 
     toast.error(

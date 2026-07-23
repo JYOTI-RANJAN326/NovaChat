@@ -9,13 +9,13 @@ import AIChat from "../components/AI/AIChat";
 import PDFChat from "../components/AI/PDFChat";
 import CodeReviewer from "../components/AI/CodeReviewer";
 import AIToolsSidebar from "../components/AI/AIToolsSidebar";
-
+import WebSearch from "../components/AI/WebSearch";
 import useSocket from "../hooks/useSocket";
-
+import ImageAnalysis from "../components/AI/ImageAnalysis";
 const Chat = () => {
   const [selectedChat, setSelectedChat] = useState(null);
   const [activeSection, setActiveSection] = useState("Chats");
-  const [activeTool, setActiveTool] = useState("chat");
+  const [activeTool, setActiveTool] = useState(null);
 
   const { user } = useSelector((state) => state.auth);
 
@@ -53,20 +53,37 @@ const Chat = () => {
         "
       >
         {/* Left Sidebar */}
-        <div className="flex h-full flex-shrink-0 overflow-hidden">
+       {/* Left Sidebar */}
+<div
+  className={`
+    flex
+    h-full
+    flex-shrink-0
+    overflow-hidden
+
+    ${
+      activeSection === "AI Assistant"
+        ? ""
+        : selectedChat
+        ? "hidden lg:flex"
+        : "flex"
+    }
+  `}
+>
 
   {/* Main Navigation Sidebar */}
   <Sidebar
     activeSection={activeSection}
     setActiveSection={setActiveSection}
-  />
+/>
 
   {/* Second Sidebar */}
-  {activeSection === "AI Assistant" ? (
+   {activeSection === "AI Assistant" ? (
     <AIToolsSidebar
       activeTool={activeTool}
       setActiveTool={setActiveTool}
     />
+
   ) : (
     <ChatList
       className="w-[340px] px-4 py-10"
@@ -78,11 +95,42 @@ const Chat = () => {
 
 </div>
 
-        {/* Right Side */}
-        <div className="flex flex-1 flex-col w- overflow-hidden bg-[#0B1120]/40">
-{activeSection === "AI Assistant" ? (
+{/* Right Side */}
+{/* Right Side */}
+<div
+  className={`
+    flex
+    flex-1
+    flex-col
+    overflow-hidden
+    bg-[#0B1120]/40
 
-  <main className="flex flex-1 min-h-0 flex-col bg-[#0B1120] p-6">
+    ${
+      activeSection === "AI Assistant"
+        ? "flex"
+        : selectedChat
+        ? "flex"
+        : "hidden lg:flex"
+    }
+  `}
+>{activeSection === "AI Assistant" ? (
+
+ <main
+  className={`
+    flex
+    flex-1
+    min-h-0
+    flex-col
+    bg-[#0B1120]
+    p-6
+
+    ${
+      activeTool
+        ? "flex"
+        : "hidden lg:flex"
+    }
+  `}
+>
 
     <div
       className="
@@ -99,21 +147,20 @@ const Chat = () => {
         shadow-2xl
       "
     >
-      {activeTool === "chat" && <AIChat />}
-      {activeTool === "pdf" && <PDFChat />}
-      {activeTool === "code" && <CodeReviewer />}
+     {activeTool === "chat" && (
+  <AIChat setActiveTool={setActiveTool} />
+)}
+      {activeTool === "pdf" && (<PDFChat setActiveTool={setActiveTool} />
+)}
+      {activeTool === "code" && (<CodeReviewer setActiveTool={setActiveTool} />)}
 
-      {activeTool === "image" && (
-        <div className="flex h-full items-center justify-center text-slate-400">
-          🚧 Image Analysis Coming Soon
-        </div>
-      )}
+     {activeTool === "image" && (
+  <ImageAnalysis setActiveTool={setActiveTool} />
+)}
 
-      {activeTool === "web" && (
-        <div className="flex h-full items-center justify-center text-slate-400">
-          🚧 Web Search Coming Soon
-        </div>
-      )}
+{activeTool === "web" && (
+  <WebSearch setActiveTool={setActiveTool} />
+)}
     </div>
 
   </main>

@@ -71,8 +71,11 @@ const handleLogout = async () => {
 
     socket.disconnect();
 
-    dispatch(logoutUser());
+    
+localStorage.removeItem("token");
+localStorage.removeItem("user");
 
+dispatch(logoutUser());
     toast.success("Logged out successfully");
 
     navigate("/login", { replace: true });

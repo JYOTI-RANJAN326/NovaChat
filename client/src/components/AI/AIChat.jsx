@@ -3,6 +3,7 @@ import {
   FiSend,
   FiPaperclip,
   FiMic,
+  FiArrowLeft,
 } from "react-icons/fi";
 import {
   askAI,
@@ -12,7 +13,7 @@ import {
 import MessageBubble from "./MessageBubble";
 import WelcomeScreen from "./WelcomeScreen";
 
-const AIChat = () => {
+const AIChat = ({ setActiveTool }) => {
  const [messages, setMessages] = useState([]);
 
   const [prompt, setPrompt] = useState("");
@@ -112,7 +113,27 @@ const handleInput = (e) => {
 <div className="sticky top-0 z-20 border-b border-white/10 bg-slate-950/80 backdrop-blur-xl">
   <div className="flex items-center justify-between px-6 py-4">
 
-    <div className="flex items-center gap-4">
+   <div className="flex items-center gap-4">
+
+  {/* Mobile Back Button */}
+  <button
+    onClick={() => setActiveTool(null)}
+    className="
+      lg:hidden
+      flex
+      h-10
+      w-10
+      items-center
+      justify-center
+      rounded-xl
+      bg-white/5
+      text-white
+      transition
+      hover:bg-white/10
+    "
+  >
+    <FiArrowLeft size={22} />
+  </button>
 
       <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 text-2xl shadow-lg">
         🤖
@@ -241,11 +262,12 @@ const handleInput = (e) => {
     >
       <FiSend size={23} />
     </button>
-
+  
+   
   </div>
 
 </div>
-
+ <br/>
     </div>
   );
 };

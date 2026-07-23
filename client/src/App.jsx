@@ -54,7 +54,7 @@ function App() {
       dispatch(
         setUser({
           user: response.data,
-          token: null,
+          token,
         })
       );
     } catch (error) {

@@ -3,6 +3,7 @@ import {
   FiPhone,
   FiVideo,
   FiMoreVertical,
+  FiArrowLeft,
 } from "react-icons/fi";
 import { useSelector, useDispatch } from "react-redux";
 import { toast } from "react-hot-toast";
@@ -11,7 +12,11 @@ import GroupInfo from "./GroupInfo";
 import { socket } from "../../services/socket";
 import { setOutgoingCall } from "../../slices/callSlice";
 
-const ChatHeader = ({ chat, refreshChat }) => {
+const ChatHeader = ({
+  chat,
+  refreshChat,
+  setSelectedChat,
+}) => {
   const { user } = useSelector((state) => state.auth);
   const { onlineUsers = [] } = useSelector((state) => state.socket);
 
@@ -37,10 +42,6 @@ const ChatHeader = ({ chat, refreshChat }) => {
     !chat.isGroupChat &&
     otherUser &&
     onlineUsers.includes(otherUser._id);
-if (!isOnline) {
-    toast.error("User is offline.");
-    return;
-}
 
     const formatLastSeen = (lastSeen) => {
   if (!lastSeen) return "Offline";
@@ -106,25 +107,29 @@ dispatch(
 
   return (
   <>
-    <header
-      className="
-        sticky
-        top-0
-        z-30
-        flex
-        h-[88px]
-        items-center
-        justify-between
-        border-b
-        border-white/10
-        bg-[#08111F]/80
-        px-8
-        backdrop-blur-3xl
-      "
-    >
-      {/* LEFT */}
+   <div className="flex items-center gap-3">
 
-      <motion.div
+  {/* Mobile Back Button */}
+  <button
+    onClick={() => setSelectedChat(null)}
+    className="
+      flex
+      lg:hidden
+      h-10
+      w-10
+      items-center
+      justify-center
+      rounded-xl
+      bg-white/5
+      text-white
+      hover:bg-white/10
+      transition
+    "
+  >
+    <FiArrowLeft className="text-xl" />
+  </button>
+
+  <motion.div
         whileHover={{ x: 2 }}
         onClick={() =>
           chat.isGroupChat && setShowGroupInfo(true)
@@ -351,7 +356,7 @@ dispatch(
         </motion.button>
 
       </div>
-    </header>
+   </div>
 
     {showGroupInfo && (
       <GroupInfo
