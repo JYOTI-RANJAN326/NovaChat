@@ -4,6 +4,7 @@ const User = require("../models/User");
 
 const socketEvents = require("./socketEvents");
 
+const usersInCall = new Set();
 module.exports = (io, socket, onlineUsers) => {
 
     console.log("Connected:", socket.id);
@@ -61,9 +62,10 @@ console.log("User Online:", userId);
     // Voice Call
     // ==================================
 
-    const usersInCall = new Set();
+    
 
 socket.on("call-user", (data) => {
+    console.log("call-user", data);
   const receiverSocketId = onlineUsers.get(data.receiverId);
 
   if (!receiverSocketId) {
@@ -90,6 +92,10 @@ socket.on("call-user", (data) => {
     // ==================================
 
     socket.on("webrtc-signal", (data) => {
+        console.log(
+    "Signal:",
+    data.signal.type
+);
 
         const receiverSocketId =
             onlineUsers.get(data.receiverId);
@@ -107,12 +113,17 @@ socket.on("call-user", (data) => {
     });
 
     socket.on("accept-call", (data) => {
+        console.log("accept-call received", data);
         usersInCall.add(data.callerId);
         usersInCall.add(data.receiverId);
         const callerSocketId =
             onlineUsers.get(data.callerId);
 
         if (!callerSocketId) return;
+        console.log(
+    "Emitting call-accepted to",
+    callerSocketId
+);
 
         io.to(callerSocketId).emit(
             "call-accepted",
@@ -162,9 +173,9 @@ socket.on("call-user", (data) => {
        if (socket.userId) {
          usersInCall.delete(socket.userId);
 
-    socket.broadcast.emit("call-ended", {
-    senderId: socket.userId,
-  });
+//     socket.broadcast.emit("call-ended", {
+//     senderId: socket.userId,
+//   });
 
     if (
         onlineUsers.get(socket.userId) === socket.id

@@ -5,7 +5,7 @@ import {
   useCallback,
 } from "react";
 import { useDispatch, useSelector } from "react-redux";
-
+import { toast } from "react-hot-toast";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -26,6 +26,8 @@ import {
   signalPeer,
   destroyPeer,
   stopLocalStream,
+  getStream,
+  getRemoteStream,
 } from "./services/webrtc";
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import { setOnlineUsers } from "./slices/socketSlice";
@@ -82,17 +84,18 @@ const { user } = useSelector(
 );
 const startCaller = useCallback(async () => {
   if (!outgoingCall) return;
-
+const isVideoCall = outgoingCall?.callType === "video";
  const stream = await getLocalStream(
     outgoingCall?.callType === "video"
 );
+
 if (
     stream.getVideoTracks().length > 0 &&
     localVideoRef.current
 ) {
     localVideoRef.current.srcObject = stream;
 }
-  //dispatch(setLocalStream(stream));
+ // dispatch(setLocalStream(stream));
 
   createCallerPeer({
     stream,
@@ -108,18 +111,11 @@ if (
     },
 
    onStream: (remoteStream) => {
-
   console.log("📹 Remote Stream:", remoteStream.id);
 
-  if (
-    outgoingCall?.callType === "video" &&
-    remoteVideoRef.current
-  ) {
+  if (isVideoCall && remoteVideoRef.current) {
     remoteVideoRef.current.srcObject = remoteStream;
-    return;
-  }
-
-  if (remoteAudioRef.current) {
+  } else if (remoteAudioRef.current) {
     remoteAudioRef.current.srcObject = remoteStream;
     remoteAudioRef.current.play().catch(console.error);
   }
@@ -141,17 +137,25 @@ if (
 ]);
 const startReceiver = useCallback(async () => {
   if (!incomingCall) return;
+  const isVideoCall = incomingCall?.callType === "video";
+let stream;
+try {
+ stream = await getLocalStream(isVideoCall);
+} catch (err) {
+  console.error("Media device error:", err);
+  toast.error("Camera/Mic unavailable. Check if another app or tab is using it.");
+  dispatch(endCall());
+  dispatch(clearOutgoingCall());
+  return;
+}
 
- const stream = await getLocalStream(
-    incomingCall?.callType === "video"
-);
 if (
     stream.getVideoTracks().length > 0 &&
     localVideoRef.current
 ) {
     localVideoRef.current.srcObject = stream;
 }
- // dispatch(setLocalStream(stream));
+  //dispatch(setLocalStream(stream));
 
   createReceiverPeer({
     stream,
@@ -165,24 +169,16 @@ if (
 
     },
 
-   onStream: (remoteStream) => {
-
+  onStream: (remoteStream) => {
   console.log("📹 Remote Stream:", remoteStream.id);
 
-  if (
-    incomingCall?.callType === "video" &&
-    remoteVideoRef.current
-  ) {
+  if (isVideoCall && remoteVideoRef.current) {
     remoteVideoRef.current.srcObject = remoteStream;
-    return;
-  }
-
-  if (remoteAudioRef.current) {
+  } else if (remoteAudioRef.current) {
     remoteAudioRef.current.srcObject = remoteStream;
     remoteAudioRef.current.play().catch(console.error);
   }
 },
-
     onClose: () => {
   stopLocalMedia();
 
@@ -209,6 +205,25 @@ if (
 const stopLocalMedia = useCallback(() => {
   stopLocalStream();
 }, []);
+useEffect(() => {
+  if (!inCall) return;
+
+  const local = getStream();
+  const remote = getRemoteStream();
+
+  if (localVideoRef.current && local) {
+    localVideoRef.current.srcObject = local;
+  }
+
+  if (remoteVideoRef.current && remote) {
+    remoteVideoRef.current.srcObject = remote;
+  }
+
+  if (remoteAudioRef.current && remote) {
+    remoteAudioRef.current.srcObject = remote;
+    remoteAudioRef.current.play().catch(console.error);
+  }
+}, [inCall]);
   // ===============================
   // Online Users
   // ===============================
@@ -251,14 +266,14 @@ socket.off("user-busy");
   // Call Accepted
   // ===============================
 
- socket.on("call-accepted", () => {
-console.log("Call Accepted");
+socket.on("call-accepted", async () => {
+  console.log("Call Accepted");
 
- dispatch(startCall(outgoingCall));
+  dispatch(startCall(outgoingCall));
 
-startCaller();
+   startCaller();
 
-dispatch(clearOutgoingCall());
+  dispatch(clearOutgoingCall());
 });
 
   // ===============================
@@ -348,22 +363,19 @@ useEffect(() => {
       {incomingCall && (
         <IncomingCallModal
           caller={incomingCall}
-        onAccept={() => {
-
+       onAccept={() => {
   socket.emit("accept-call", {
-
     callerId: incomingCall.callerId,
-
     receiverId: user._id,
-
   });
 
   dispatch(startCall(incomingCall));
-  startReceiver();
+
+  startReceiver();   // or startReceiver() if you don't make it async here
 
   dispatch(clearIncomingCall());
-
-}}onReject={() => {
+}
+}onReject={() => {
 
   socket.emit("reject-call", {
 
@@ -381,7 +393,7 @@ useEffect(() => {
       {inCall && (
  <CallScreen
 remoteUser={remoteUser}
-    remoteUser={remoteUser}
+    
   remoteAudioRef={remoteAudioRef}
   remoteVideoRef={remoteVideoRef}
   localVideoRef={localVideoRef}

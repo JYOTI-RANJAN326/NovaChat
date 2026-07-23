@@ -1,6 +1,6 @@
 import axios from "axios";
 import { axiosInstance } from "./apiConnector";
-const BASE_URL = "http://localhost:5000/api/v1/messages";
+const BASE_URL = `${import.meta.env.VITE_BASE_URL}/messages`;
 
 export const getMessages = async (chatId) => {
   try {

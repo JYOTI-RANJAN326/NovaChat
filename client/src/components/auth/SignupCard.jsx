@@ -49,7 +49,7 @@ const [image, setImage] = useState(null);
   };
 const handleGoogleSignup = () => {
   window.location.href =
-    "http://localhost:5000/api/v1/auth/google";
+    `${import.meta.env.VITE_BASE_URL}/auth/google`;
 };
  const handleSubmit = async (e) => {
   e.preventDefault();

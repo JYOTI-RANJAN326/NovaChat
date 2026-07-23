@@ -16,49 +16,14 @@ const GoogleSuccess = () => {
       return;
     }
 
-//     const fetchUser = async () => {
-//       try {
-//         const response = await fetch(
-//           "http://localhost:5000/api/v1/auth/me",
-//           {
-//             headers: {
-//               Authorization: `Bearer ${token}`,
-//             },
-//             credentials: "include",
-//           }
-//         );
 
-//         const data = await response.json();
-
-//         if (data.success) {
-//           dispatch(
-//             setUser({
-//               user: data.data,
-//               token,
-//             })
-//           );
-
-//           localStorage.setItem("token", token);
-
-//           navigate("/chat");
-//         } else {
-//           navigate("/login");
-//         }
-//       } catch (err) {
-//         console.error(err);
-//         navigate("/login");
-//       }
-//     };
-
-//     fetchUser();
-//   }, [dispatch, navigate, searchParams]);
 
 const fetchUser = async () => {
   try {
     console.log("Token:", token);
 
     const response = await fetch(
-      "http://localhost:5000/api/v1/auth/me",
+      `${import.meta.env.VITE_BASE_URL}/auth/me`,
       {
         headers: {
           Authorization: `Bearer ${token}`,

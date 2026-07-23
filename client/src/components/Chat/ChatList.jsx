@@ -299,16 +299,17 @@ filteredChats.sort((a, b) => {
 
 ) : (
 
-  filteredChats.map((chat) => (
+ filteredChats.map((chat) => (
+  <div key={chat._id} className="mb-10">
     <ChatItem
-      key={chat._id}
       chat={chat}
       currentUserId={user?._id}
       active={selectedChat?._id === chat._id}
       onSelect={setSelectedChat}
       refreshChats={refreshChats}
     />
-  ))
+  </div>
+))
 
 )}
       </div>

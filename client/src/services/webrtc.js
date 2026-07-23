@@ -17,13 +17,31 @@ const ICE_CONFIG = {
   ],
 };
 
+
 // ===============================
 // Microphone
 // ===============================
 
 export const getLocalStream = async (video = false) => {
-  if (localStream) return localStream;
+   console.log("getLocalStream called. video =", video);
+  console.log("Current localStream =", localStream);
 
+  if (localStream) {
+    console.log("Existing stream found");
+    console.log("Tracks:", localStream.getTracks());
+
+    const hasVideo = localStream.getVideoTracks().length > 0;
+
+    if (hasVideo === video) {
+      console.log("✅ Reusing existing stream");
+      return localStream;
+    }
+
+    console.log("♻️ Recreating stream");
+    localStream.getTracks().forEach(track => track.stop());
+    localStream = null;
+  }
+   console.log("Requesting camera...");
   localStream = await navigator.mediaDevices.getUserMedia({
     audio: {
       echoCancellation: true,
@@ -32,6 +50,10 @@ export const getLocalStream = async (video = false) => {
     },
     video,
   });
+ console.log("Camera acquired.");
+  console.log("Local Stream:", localStream);
+  console.log("Video Tracks:", localStream.getVideoTracks());
+  console.log("Audio Tracks:", localStream.getAudioTracks());
 
   return localStream;
 };
@@ -80,17 +102,29 @@ export const createPeer = ({
     stream,
     config: ICE_CONFIG,
   });
+  console.log(
+  initiator
+    ? "🟢 Caller Peer Created"
+    : "🔵 Receiver Peer Created"
+);
 
   // Send SDP + ICE
-  peer.on("signal", (signal) => {
-  console.log("Generated Signal:", signal.type || "ICE");
+ peer.on("signal", (signal) => {
+  console.log(
+    initiator ? "🟢 CALLER SIGNAL:" : "🔵 RECEIVER SIGNAL:",
+    signal.type || "ICE"
+  );
+
   onSignal?.(signal);
 });
 
   // Remote Audio
-  peer.on("stream", (stream) => {
-      console.log("Remote stream:", stream.id);
-  console.log("Remote stream received");
+peer.on("stream", (stream) => {
+  console.log("Remote Stream:", stream);
+
+  console.log("Remote Video Tracks:", stream.getVideoTracks());
+  console.log("Remote Audio Tracks:", stream.getAudioTracks());
+
   remoteStream = stream;
   onStream?.(stream);
 });
@@ -168,9 +202,24 @@ export const createReceiverPeer = ({
 // ===============================
 
 export const signalPeer = (signal) => {
-  if (!peer || !signal) return;
+  console.log("signalPeer() received:", signal.type);
 
-  peer.signal(signal);
+  if (!peer) {
+    console.error("❌ Peer is NULL");
+    return;
+  }
+
+  if (!signal) {
+    console.error("❌ Signal is NULL");
+    return;
+  }
+
+  try {
+    peer.signal(signal);
+    console.log("✅ peer.signal() success");
+  } catch (err) {
+    console.error("❌ peer.signal() failed:", err);
+  }
 };
 
 // ===============================

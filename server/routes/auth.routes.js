@@ -38,7 +38,7 @@ router.get(
 router.get(
   "/google/callback",
   passport.authenticate("google", {
-    failureRedirect: "http://localhost:5173/login",
+    failureRedirect: `${process.env.CLIENT_URL}/login`,
     session: true,
   }),
 
@@ -59,12 +59,13 @@ router.get(
       });
 
       res.redirect(
-        `http://localhost:5173/google-success?token=${token}`
+  `${process.env.CLIENT_URL}/google-success?token=${token}`
+
       );
     } catch (err) {
       console.error(err);
 
-      res.redirect("http://localhost:5173/login");
+      res.redirect(`${process.env.CLIENT_URL}/login`);
     }
   }
 );

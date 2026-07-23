@@ -37,6 +37,11 @@ const ChatHeader = ({ chat, refreshChat }) => {
     !chat.isGroupChat &&
     otherUser &&
     onlineUsers.includes(otherUser._id);
+if (!isOnline) {
+    toast.error("User is offline.");
+    return;
+}
+
     const formatLastSeen = (lastSeen) => {
   if (!lastSeen) return "Offline";
 
@@ -80,6 +85,14 @@ const ChatHeader = ({ chat, refreshChat }) => {
       toast.error("Unable to start call.");
       return;
     }
+dispatch(
+  setOutgoingCall({
+    receiverId: otherUser._id,
+    receiverName: otherUser.fullName,
+    callType,
+  })
+);
+
 
    socket.emit("call-user", {
   callerId: user._id,
@@ -88,13 +101,7 @@ const ChatHeader = ({ chat, refreshChat }) => {
   callType,
 });
 
-   dispatch(
-  setOutgoingCall({
-    receiverId: otherUser._id,
-    receiverName: otherUser.fullName,
-    callType,
-  })
-);
+   
   };
 
   return (

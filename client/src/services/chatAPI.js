@@ -1,7 +1,7 @@
 import axios from "axios";
 //import { apiConnector } from "./apiConnector";
 
-const BASE_URL = "http://localhost:5000/api/v1/chats";
+const BASE_URL = `${import.meta.env.VITE_BASE_URL}/chats`;
 
 const axiosConfig = {
   withCredentials: true,

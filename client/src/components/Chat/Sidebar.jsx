@@ -96,40 +96,56 @@ const handleLogout = async () => {
     initial={{ x: -80, opacity: 0 }}
     animate={{ x: 0, opacity: 1 }}
     transition={{ duration: 0.55 }}
-    className="relative flex h-screen w-[350px] flex-col overflow-hidden border-r border-white/10 bg-[#08111F]"
+    className="
+relative
+flex
+h-screen
+w-[340px]
+flex-col
+overflow-hidden
+border-r
+border-white/10
+bg-[#08111F]
+backdrop-blur-xl
+"
   >
     {/* Background */}
     <div className="absolute inset-0 bg-[#08111F] " />
     <div className="absolute -left-20 top-0 h-72 w-72 rounded-full bg-cyan-500/5 blur-[120px] " />
    
-    <div className="relative z-10 flex h-full flex-col px-5 py-6">
+    <div className="relative z-10 flex h-full flex-col px-6 py-7">
       {/* Logo */}
-      <Logo />
+     <div className="pb-6">
+    <Logo />
+</div>
       
       {/* Search */}
-      <div className="relative  mt-6">
-        <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
-
+      {/* <div className="relative  mt-6 pl-4 pr-4">
+        {/* //<FiSearch className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500" /> */}
+{/* 
         <input
-          placeholder="           Search Conversations"
+         type="text"
+          placeholder="Search Conversations"
           className="
-            h-11
-            w-full
-            rounded-xl
+            h-12
+rounded-2xl
+pl-12
+pr-5
+transition-all
+duration-300
+shadow-sm
+hover:border-cyan-500/30
+focus:border-cyan-400
+            
+          w-full
             border
             border-white/10
             bg-white/5
-            pl-11
-            pr-4
             
-            text-sm
-            text-white
-            outline-none
-            placeholder:text-slate-500
-            focus:border-cyan-500/40
+
           "
-        />
-      </div>
+        /> */}
+      {/* </div> */} 
        <br/>
        <div className="mt-5 flex gap-3">
 
@@ -177,8 +193,8 @@ const handleLogout = async () => {
 </div>
 <br/>
       {/* Menu */}
-      <div className="mt-6 w-[276px]">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+      <div className="mt-6 w-[340px] ">
+        <p className="mb-3 text-xl font-semibold uppercase tracking-[0.18em] text-slate-500">
           MENU
         </p>
         <br/>
@@ -238,7 +254,7 @@ const handleLogout = async () => {
     logout-btn
     flex
     h-[40px]
-    w-[350px]
+    w-[340px]
     
     items-center
     justify-center
