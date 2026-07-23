@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<img src="./client/src/assets/Logo/logo.png" alt="NovaChat Logo" width="180"/>
+
 
 ### Modern • Secure • Intelligent • Real-Time Messaging
 
