@@ -203,8 +203,14 @@ npm start
 <p align="center">
   <img src="./images/architecture.png" alt="NovaChat System Architecture" width="900" />
 </p>
+
 ---
+---
+
+
 ## 🖥️ Platform Preview
+
+
 <p align="center">
   <img src="./images/login.png" alt="NexLearn Loginpage" width="900" />
 </p>
@@ -221,7 +227,7 @@ npm start
   <img src="./images/ai2.png" alt="NexLearn AIpage" width="900" />
 </p>
 
-
+---
    
 ```
 Home
